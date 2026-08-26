@@ -1,5 +1,5 @@
 // Backend Persistent Store for Hospital Management System
-// Simulates a backend database with local persistence and API latency simulation
+// Simulates a backend database with local persistence and API latency simulation for both Doctor & Patient panels
 
 const STORAGE_KEYS = {
   USERS: 'hms_users',
@@ -10,6 +10,20 @@ const STORAGE_KEYS = {
   CURRENT_USER: 'hms_current_user',
   AUTH_TOKEN: 'hms_auth_token'
 };
+
+const STANDARD_SLOTS = [
+  '09:00 AM',
+  '09:30 AM',
+  '10:00 AM',
+  '10:30 AM',
+  '11:00 AM',
+  '11:30 AM',
+  '02:00 PM',
+  '02:30 PM',
+  '03:00 PM',
+  '03:30 PM',
+  '04:00 PM'
+];
 
 const INITIAL_DOCTORS = [
   {
@@ -37,28 +51,63 @@ const INITIAL_DOCTORS = [
     specialization: 'Neurology',
     department: 'Neurosciences',
     experience: '15 Years',
-    biography: 'Expert in clinical neurology focusing on movement disorders, migraines, and neuromuscular diseases.',
+    biography: 'Expert in clinical neurology focusing on movement disorders, migraines, stroke prevention, and neuromuscular diseases.',
     workingDays: ['Monday', 'Wednesday', 'Friday'],
     workingHours: '09:00 AM - 05:00 PM',
     avatar: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=300',
     rating: 4.8,
     roomNo: 'Cabinet 210, West Wing'
+  },
+  {
+    id: 'doc-103',
+    userId: 'user-doc-3',
+    fullName: 'Dr. Elena Rostova',
+    email: 'elena.rostova@hospital.org',
+    phone: '+1 (555) 345-6789',
+    specialization: 'Pediatrics',
+    department: 'Pediatric & Adolescent Medicine',
+    experience: '9 Years',
+    biography: 'Compassionate pediatrician devoted to child growth development, immunizations, and pediatric wellness care.',
+    workingDays: ['Tuesday', 'Thursday', 'Saturday'],
+    workingHours: '09:00 AM - 03:00 PM',
+    avatar: 'https://images.unsplash.com/photo-1594824813566-88855ce78961?auto=format&fit=crop&q=80&w=300',
+    rating: 4.95,
+    roomNo: 'Cabinet 105, East Wing'
+  },
+  {
+    id: 'doc-104',
+    userId: 'user-doc-4',
+    fullName: 'Dr. Robert Thorne',
+    email: 'robert.thorne@hospital.org',
+    phone: '+1 (555) 901-2345',
+    specialization: 'Orthopedics',
+    department: 'Orthopedic Surgery & Sports Medicine',
+    experience: '18 Years',
+    biography: 'Senior orthopedic surgeon specializing in joint replacement, sports injury rehabilitation, and arthroscopic surgery.',
+    workingDays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday'],
+    workingHours: '08:00 AM - 04:00 PM',
+    avatar: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=300',
+    rating: 4.85,
+    roomNo: 'Cabinet 412, South Wing'
   }
 ];
 
 const INITIAL_PATIENTS = [
   {
     id: 'pat-201',
-    doctorId: 'doc-101',
+    userId: 'user-pat-1',
     fullName: 'Eleanor Vance',
     age: 42,
+    dateOfBirth: '1984-05-12',
     gender: 'Female',
     phone: '+1 (555) 112-3344',
     email: 'eleanor.vance@gmail.com',
+    address: '742 Evergreen Terrace, Springfield, IL',
     avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=200',
     bloodGroup: 'A+',
     allergies: ['Penicillin', 'Peanuts'],
     emergencyContact: 'Robert Vance (Husband) - +1 (555) 998-1122',
+    doctorId: 'doc-101',
     medicalHistory: [
       {
         id: 'diag-1',
@@ -82,16 +131,19 @@ const INITIAL_PATIENTS = [
   },
   {
     id: 'pat-202',
-    doctorId: 'doc-101',
+    userId: 'user-pat-2',
     fullName: 'James Reynolds',
     age: 58,
+    dateOfBirth: '1968-11-24',
     gender: 'Male',
     phone: '+1 (555) 443-2211',
     email: 'j.reynolds@techmail.com',
+    address: '1088 Park Avenue, New York, NY',
     avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200',
     bloodGroup: 'O+',
     allergies: ['None'],
     emergencyContact: 'Clara Reynolds (Wife) - +1 (555) 887-3322',
+    doctorId: 'doc-101',
     medicalHistory: [
       {
         id: 'diag-3',
@@ -106,16 +158,19 @@ const INITIAL_PATIENTS = [
   },
   {
     id: 'pat-203',
-    doctorId: 'doc-101',
+    userId: 'user-pat-3',
     fullName: 'Sophia Martinez',
     age: 29,
+    dateOfBirth: '1997-02-18',
     gender: 'Female',
     phone: '+1 (555) 667-8899',
     email: 'sophia.m@designstudio.io',
+    address: '450 Sunset Blvd, Los Angeles, CA',
     avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=200',
     bloodGroup: 'B+',
     allergies: ['Sulfa Drugs'],
     emergencyContact: 'Carlos Martinez (Father) - +1 (555) 334-5566',
+    doctorId: 'doc-101',
     medicalHistory: [
       {
         id: 'diag-4',
@@ -127,34 +182,6 @@ const INITIAL_PATIENTS = [
         prescriptions: ['Magnesium supplement 400mg daily']
       }
     ]
-  },
-  {
-    id: 'pat-204',
-    doctorId: 'doc-101',
-    fullName: 'David Kim',
-    age: 64,
-    gender: 'Male',
-    phone: '+1 (555) 778-9900',
-    email: 'dkim.architect@gmail.com',
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=200',
-    bloodGroup: 'AB-',
-    allergies: ['Iodine Contrast'],
-    emergencyContact: 'Grace Kim (Daughter) - +1 (555) 445-6677',
-    medicalHistory: []
-  },
-  {
-    id: 'pat-205',
-    doctorId: 'doc-101',
-    fullName: 'Amara Okafor',
-    age: 35,
-    gender: 'Female',
-    phone: '+1 (555) 223-9988',
-    email: 'amara.okafor@global.net',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200',
-    bloodGroup: 'O-',
-    allergies: ['Latex'],
-    emergencyContact: 'Ken Okafor (Brother) - +1 (555) 112-9900',
-    medicalHistory: []
   }
 ];
 
@@ -167,6 +194,10 @@ const INITIAL_APPOINTMENTS = [
   {
     id: 'apt-301',
     doctorId: 'doc-101',
+    doctorName: 'Dr. Sarah Jenkins',
+    doctorAvatar: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=300',
+    doctorSpecialization: 'Cardiology',
+    department: 'Cardiovascular Care',
     patientId: 'pat-201',
     patientName: 'Eleanor Vance',
     patientAvatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=200',
@@ -181,6 +212,10 @@ const INITIAL_APPOINTMENTS = [
   {
     id: 'apt-302',
     doctorId: 'doc-101',
+    doctorName: 'Dr. Sarah Jenkins',
+    doctorAvatar: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=300',
+    doctorSpecialization: 'Cardiology',
+    department: 'Cardiovascular Care',
     patientId: 'pat-202',
     patientName: 'James Reynolds',
     patientAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200',
@@ -195,6 +230,10 @@ const INITIAL_APPOINTMENTS = [
   {
     id: 'apt-303',
     doctorId: 'doc-101',
+    doctorName: 'Dr. Sarah Jenkins',
+    doctorAvatar: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=300',
+    doctorSpecialization: 'Cardiology',
+    department: 'Cardiovascular Care',
     patientId: 'pat-203',
     patientName: 'Sophia Martinez',
     patientAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=200',
@@ -208,49 +247,43 @@ const INITIAL_APPOINTMENTS = [
   },
   {
     id: 'apt-304',
-    doctorId: 'doc-101',
-    patientId: 'pat-204',
-    patientName: 'David Kim',
-    patientAvatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=200',
+    doctorId: 'doc-102',
+    doctorName: 'Dr. Marcus Vance',
+    doctorAvatar: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=300',
+    doctorSpecialization: 'Neurology',
+    department: 'Neurosciences',
+    patientId: 'pat-201',
+    patientName: 'Eleanor Vance',
+    patientAvatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=200',
     date: TOMORROW_STR,
     time: '10:00 AM',
     type: 'Initial Consultation',
-    reason: 'Referred by primary physician for exertional chest tightness.',
+    reason: 'Consultation for tension headaches and neck stiffness.',
     status: 'Confirmed',
     diagnosis: '',
     recommendations: ''
   },
   {
     id: 'apt-305',
-    doctorId: 'doc-101',
-    patientId: 'pat-205',
-    patientName: 'Amara Okafor',
-    patientAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200',
-    date: IN_3_DAYS_STR,
-    time: '03:30 PM',
-    type: 'Echocardiogram Follow-up',
-    reason: 'Evaluate structural heart condition and valve function.',
-    status: 'Pending',
-    diagnosis: '',
-    recommendations: ''
-  },
-  {
-    id: 'apt-306',
-    doctorId: 'doc-101',
+    doctorId: 'doc-103',
+    doctorName: 'Dr. Elena Rostova',
+    doctorAvatar: 'https://images.unsplash.com/photo-1594824813566-88855ce78961?auto=format&fit=crop&q=80&w=300',
+    doctorSpecialization: 'Pediatrics',
+    department: 'Pediatric & Adolescent Medicine',
     patientId: 'pat-201',
     patientName: 'Eleanor Vance',
     patientAvatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=200',
-    date: YESTERDAY_STR,
-    time: '04:00 PM',
-    type: 'Urgent Consultation',
-    reason: 'Dizziness after morning dosage.',
-    status: 'Cancelled',
+    date: IN_3_DAYS_STR,
+    time: '03:30 PM',
+    type: 'Family Wellness Consultation',
+    reason: 'Discussion regarding pediatric allergy prevention strategies.',
+    status: 'Pending',
     diagnosis: '',
     recommendations: ''
   }
 ];
 
-// Helper to seed localStorage
+// Seed Helper
 export function initializeBackendStore() {
   if (!localStorage.getItem(STORAGE_KEYS.DOCTORS)) {
     localStorage.setItem(STORAGE_KEYS.DOCTORS, JSON.stringify(INITIAL_DOCTORS));
@@ -262,20 +295,20 @@ export function initializeBackendStore() {
     localStorage.setItem(STORAGE_KEYS.APPOINTMENTS, JSON.stringify(INITIAL_APPOINTMENTS));
   }
   if (!localStorage.getItem(STORAGE_KEYS.CURRENT_USER)) {
-    // Default logged in doctor user
+    // Default logged in user (Patient role default, can switch to Doctor)
     const defaultUser = {
-      id: 'user-doc-1',
-      doctorId: 'doc-101',
-      name: 'Dr. Sarah Jenkins',
-      email: 'sarah.jenkins@hospital.org',
-      role: 'doctor',
-      token: 'jwt_mock_token_doctor_sarah_jenkins_2026'
+      id: 'user-pat-1',
+      patientId: 'pat-201',
+      name: 'Eleanor Vance',
+      email: 'eleanor.vance@gmail.com',
+      role: 'patient',
+      token: 'jwt_mock_token_patient_eleanor_vance_2026'
     };
     localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(defaultUser));
   }
 }
 
-// Data access utilities
+// Data Accessors
 export function getStoredDoctors() {
   initializeBackendStore();
   return JSON.parse(localStorage.getItem(STORAGE_KEYS.DOCTORS) || '[]');
@@ -304,6 +337,7 @@ export function setCurrentUser(user) {
   }
 }
 
+// Mutators & Slot Checkers
 export function updateStoredDoctor(doctorId, updatedFields) {
   const doctors = getStoredDoctors();
   const index = doctors.findIndex(d => d.id === doctorId);
@@ -313,6 +347,17 @@ export function updateStoredDoctor(doctorId, updatedFields) {
     return doctors[index];
   }
   throw new Error('Doctor not found');
+}
+
+export function updateStoredPatient(patientId, updatedFields) {
+  const patients = getStoredPatients();
+  const index = patients.findIndex(p => p.id === patientId);
+  if (index !== -1) {
+    patients[index] = { ...patients[index], ...updatedFields };
+    localStorage.setItem(STORAGE_KEYS.PATIENTS, JSON.stringify(patients));
+    return patients[index];
+  }
+  throw new Error('Patient not found');
 }
 
 export function updateStoredAppointment(appointmentId, updatedFields) {
@@ -326,6 +371,79 @@ export function updateStoredAppointment(appointmentId, updatedFields) {
   throw new Error('Appointment not found');
 }
 
+export function cancelStoredAppointment(appointmentId, patientId) {
+  const appointments = getStoredAppointments();
+  const index = appointments.findIndex(a => a.id === appointmentId);
+  if (index === -1) throw new Error('Appointment not found');
+
+  const appt = appointments[index];
+  if (appt.patientId !== patientId) {
+    throw new Error('Unauthorized: You can only cancel your own appointments.');
+  }
+
+  appt.status = 'Cancelled';
+  localStorage.setItem(STORAGE_KEYS.APPOINTMENTS, JSON.stringify(appointments));
+  return appt;
+}
+
+export function getAvailableSlotsForDoctor(doctorId, date) {
+  const appointments = getStoredAppointments();
+  // Filter active appointments for doctor on date (excluding cancelled)
+  const bookedSlots = appointments
+    .filter(a => a.doctorId === doctorId && a.date === date && a.status !== 'Cancelled')
+    .map(a => a.time);
+
+  return STANDARD_SLOTS.map(time => ({
+    time,
+    isAvailable: !bookedSlots.includes(time)
+  }));
+}
+
+export function createStoredAppointment(data) {
+  const { doctorId, patientId, date, time, reason, type = 'General Consultation' } = data;
+
+  const doctors = getStoredDoctors();
+  const doctor = doctors.find(d => d.id === doctorId);
+  if (!doctor) throw new Error('Selected doctor does not exist.');
+
+  const patients = getStoredPatients();
+  const patient = patients.find(p => p.id === patientId);
+  if (!patient) throw new Error('Patient record not found.');
+
+  // Check double booking
+  const existingAppts = getStoredAppointments();
+  const isAlreadyBooked = existingAppts.some(
+    a => a.doctorId === doctorId && a.date === date && a.time === time && a.status !== 'Cancelled'
+  );
+
+  if (isAlreadyBooked) {
+    throw new Error(`The time slot ${time} on ${date} is already booked for ${doctor.fullName}. Please choose another time.`);
+  }
+
+  const newAppt = {
+    id: `apt-${Date.now()}`,
+    doctorId: doctor.id,
+    doctorName: doctor.fullName,
+    doctorAvatar: doctor.avatar,
+    doctorSpecialization: doctor.specialization,
+    department: doctor.department,
+    patientId: patient.id,
+    patientName: patient.fullName,
+    patientAvatar: patient.avatar,
+    date,
+    time,
+    type,
+    reason,
+    status: 'Pending',
+    diagnosis: '',
+    recommendations: ''
+  };
+
+  existingAppts.unshift(newAppt);
+  localStorage.setItem(STORAGE_KEYS.APPOINTMENTS, JSON.stringify(existingAppts));
+  return newAppt;
+}
+
 export function saveStoredDiagnosis(appointmentId, diagnosis, recommendations) {
   const appointments = getStoredAppointments();
   const apptIndex = appointments.findIndex(a => a.id === appointmentId);
@@ -334,22 +452,20 @@ export function saveStoredDiagnosis(appointmentId, diagnosis, recommendations) {
   const appt = appointments[apptIndex];
   appt.diagnosis = diagnosis;
   appt.recommendations = recommendations;
-  appt.status = 'Completed'; // Automatically mark completed when diagnosis saved
+  appt.status = 'Completed';
 
   localStorage.setItem(STORAGE_KEYS.APPOINTMENTS, JSON.stringify(appointments));
 
-  // Also add to patient medical history record
   const patients = getStoredPatients();
   const patientIndex = patients.findIndex(p => p.id === appt.patientId);
   if (patientIndex !== -1) {
     const patient = patients[patientIndex];
     if (!patient.medicalHistory) patient.medicalHistory = [];
     
-    // Check if entry for this date/diagnosis exists, or append new entry
     const newRecord = {
       id: `diag-${Date.now()}`,
       date: appt.date || new Date().toISOString().split('T')[0],
-      doctorName: 'Dr. Sarah Jenkins',
+      doctorName: appt.doctorName || 'Dr. Sarah Jenkins',
       diagnosis: diagnosis,
       notes: `Appointment Type: ${appt.type}. Reason: ${appt.reason}`,
       recommendations: recommendations,

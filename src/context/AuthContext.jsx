@@ -1,4 +1,4 @@
-// Auth Context providing role checking, authentication state, and logged-in doctor session
+// Auth Context supporting both Doctor and Patient roles
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { getCurrentUser, setCurrentUser } from '../services/backendStore.js';
@@ -9,20 +9,24 @@ const AuthContext = createContext();
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [doctorProfile, setDoctorProfile] = useState(null);
+  const [patientProfile, setPatientProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isOnDuty, setIsOnDuty] = useState(true);
 
-  // Initialize auth state
+  // Load active user session
   useEffect(() => {
     async function loadAuth() {
       try {
         const storedUser = getCurrentUser();
-        if (storedUser && storedUser.role === 'doctor') {
+        if (storedUser) {
           setUser(storedUser);
-          const profile = await api.getCurrentDoctorProfile(storedUser.doctorId);
-          setDoctorProfile(profile);
-        } else if (storedUser) {
-          setUser(storedUser);
+          if (storedUser.role === 'doctor') {
+            const profile = await api.getCurrentDoctorProfile(storedUser.doctorId);
+            setDoctorProfile(profile);
+          } else if (storedUser.role === 'patient') {
+            const profile = await api.getPatientProfile(storedUser.patientId);
+            setPatientProfile(profile);
+          }
         }
       } catch (err) {
         console.error('Failed to load authenticated user:', err);
@@ -41,6 +45,11 @@ export function AuthProvider({ children }) {
       if (loggedUser.role === 'doctor') {
         const profile = await api.getCurrentDoctorProfile(loggedUser.doctorId);
         setDoctorProfile(profile);
+        setPatientProfile(null);
+      } else if (loggedUser.role === 'patient') {
+        const profile = await api.getPatientProfile(loggedUser.patientId);
+        setPatientProfile(profile);
+        setDoctorProfile(null);
       }
       return loggedUser;
     } finally {
@@ -52,12 +61,16 @@ export function AuthProvider({ children }) {
     setCurrentUser(null);
     setUser(null);
     setDoctorProfile(null);
+    setPatientProfile(null);
   };
 
   const refreshProfile = async () => {
-    if (user && user.doctorId) {
+    if (user?.role === 'doctor' && user.doctorId) {
       const profile = await api.getCurrentDoctorProfile(user.doctorId);
       setDoctorProfile(profile);
+    } else if (user?.role === 'patient' && user.patientId) {
+      const profile = await api.getPatientProfile(user.patientId);
+      setPatientProfile(profile);
     }
   };
 
@@ -66,13 +79,16 @@ export function AuthProvider({ children }) {
   };
 
   const isDoctor = user?.role === 'doctor';
+  const isPatient = user?.role === 'patient';
 
   return (
     <AuthContext.Provider
       value={{
         user,
         doctorProfile,
+        patientProfile,
         isDoctor,
+        isPatient,
         loading,
         isOnDuty,
         toggleDutyStatus,

@@ -1,162 +1,238 @@
-// Top Navigation Bar for Doctor Panel
+// Responsive Top Navigation Bar with Role-based Context Switcher
 
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext.jsx';
-import { Search, Bell, Calendar, User, LogOut, CheckCircle, ShieldAlert } from 'lucide-react';
+import {
+  Activity,
+  User,
+  LogOut,
+  Bell,
+  Stethoscope,
+  Heart,
+  Calendar,
+  Search,
+  LayoutDashboard,
+  ShieldCheck,
+  ChevronDown
+} from 'lucide-react';
 
-export function Navbar({ activeTab, setActiveTab, onOpenAuthModal }) {
-  const { doctorProfile, user, isDoctor, isOnDuty, toggleDutyStatus, logout } = useAuth();
-  const [showNotifications, setShowNotifications] = useState(false);
+export function Navbar({ activeTab, setActiveTab, onOpenAuthModal, onBookAppointment }) {
+  const { user, doctorProfile, patientProfile, isDoctor, isPatient, isOnDuty, toggleDutyStatus, logout } = useAuth();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
-  const notifications = [
-    { id: 1, title: 'New Appointment', desc: 'Amara Okafor requested appointment on Thursday', time: '10m ago', unread: true },
-    { id: 2, title: 'ECG Results Ready', desc: 'Holter report for Sophia Martinez uploaded by Lab', time: '45m ago', unread: true },
-    { id: 3, title: 'Shift Reminder', desc: 'Scheduled duty begins at 08:30 AM tomorrow', time: '2h ago', unread: false }
-  ];
+  const displayName = isDoctor
+    ? doctorProfile?.fullName || user?.name || 'Dr. Sarah Jenkins'
+    : patientProfile?.fullName || user?.name || 'Eleanor Vance';
 
-  const todayFormatted = new Date().toLocaleDateString('en-US', {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric'
-  });
+  const avatarUrl = isDoctor
+    ? doctorProfile?.avatar || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=300'
+    : patientProfile?.avatar || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=200';
+
+  const userRoleTitle = isDoctor ? 'Physician Care Specialist' : 'Registered Patient';
 
   return (
-    <header className="sticky top-0 z-30 bg-slate-950/80 backdrop-blur-xl border-b border-slate-800/80 px-4 lg:px-8 py-3 flex items-center justify-between shadow-lg">
-      {/* Left side title / quick search */}
-      <div className="flex items-center gap-4">
+    <header className="sticky top-0 z-40 w-full bg-slate-950/90 backdrop-blur-md border-b border-slate-800/80 px-4 md:px-8 py-3.5 flex items-center justify-between shadow-xl">
+      {/* Brand Logo & Module Indicator */}
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-teal-500 to-cyan-400 p-0.5 shadow-lg shadow-teal-500/20">
+          <div className="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center">
+            <Activity className="w-5 h-5 text-teal-400" />
+          </div>
+        </div>
+
         <div>
-          <h1 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
-            <span>Doctor Workspace</span>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-teal-500/20 text-teal-300 border border-teal-500/30 font-mono">
-              PRO PANEL
+          <div className="flex items-center gap-2">
+            <h1 className="text-base font-extrabold tracking-tight text-white">MedPulse</h1>
+            <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-teal-500/10 text-teal-400 border border-teal-500/20">
+              HMS {isDoctor ? 'Doctor' : 'Patient'}
             </span>
-          </h1>
-          <p className="text-xs text-slate-400 hidden sm:block">
-            {todayFormatted} • Hospital Management System
-          </p>
+          </div>
+          <p className="text-[11px] text-slate-400 font-medium">Hospital Management Platform</p>
         </div>
       </div>
 
-      {/* Right side actions */}
+      {/* Navigation Quick Links */}
+      <div className="hidden lg:flex items-center gap-1 bg-slate-900/60 p-1.5 rounded-2xl border border-slate-800/80">
+        {isPatient ? (
+          <>
+            <button
+              onClick={() => setActiveTab('dashboard')}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                activeTab === 'dashboard'
+                  ? 'bg-teal-500 text-slate-950 shadow-md font-bold'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800'
+              }`}
+            >
+              Dashboard
+            </button>
+            <button
+              onClick={() => setActiveTab('findDoctors')}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                activeTab === 'findDoctors'
+                  ? 'bg-teal-500 text-slate-950 shadow-md font-bold'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800'
+              }`}
+            >
+              Find Doctors
+            </button>
+            <button
+              onClick={() => setActiveTab('appointments')}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                activeTab === 'appointments'
+                  ? 'bg-teal-500 text-slate-950 shadow-md font-bold'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800'
+              }`}
+            >
+              My Appointments
+            </button>
+            <button
+              onClick={() => setActiveTab('profile')}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                activeTab === 'profile'
+                  ? 'bg-teal-500 text-slate-950 shadow-md font-bold'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800'
+              }`}
+            >
+              Profile
+            </button>
+          </>
+        ) : (
+          <>
+            <button
+              onClick={() => setActiveTab('dashboard')}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                activeTab === 'dashboard'
+                  ? 'bg-teal-500 text-slate-950 shadow-md font-bold'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800'
+              }`}
+            >
+              Doctor Dashboard
+            </button>
+            <button
+              onClick={() => setActiveTab('appointments')}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                activeTab === 'appointments'
+                  ? 'bg-teal-500 text-slate-950 shadow-md font-bold'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800'
+              }`}
+            >
+              Consultations
+            </button>
+            <button
+              onClick={() => setActiveTab('patients')}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                activeTab === 'patients'
+                  ? 'bg-teal-500 text-slate-950 shadow-md font-bold'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800'
+              }`}
+            >
+              My Patients
+            </button>
+            <button
+              onClick={() => setActiveTab('profile')}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                activeTab === 'profile'
+                  ? 'bg-teal-500 text-slate-950 shadow-md font-bold'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800'
+              }`}
+            >
+              Doctor Profile
+            </button>
+          </>
+        )}
+      </div>
+
+      {/* User Actions & Role Switcher */}
       <div className="flex items-center gap-3">
-        {/* On Duty Status Switcher */}
+        {/* Book Appointment Shortcut for Patient */}
+        {isPatient && onBookAppointment && (
+          <button
+            onClick={() => onBookAppointment()}
+            className="hidden sm:flex px-3.5 py-2 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold text-xs items-center gap-1.5 shadow-md shadow-teal-500/20 transition-all"
+          >
+            <Calendar className="w-3.5 h-3.5" />
+            <span>Book Visit</span>
+          </button>
+        )}
+
+        {/* Doctor Duty Toggle */}
         {isDoctor && (
           <button
             onClick={toggleDutyStatus}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all duration-200 ${
+            className={`hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-semibold transition-all ${
               isOnDuty
-                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/20'
-                : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700'
+                ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30'
+                : 'bg-rose-500/10 text-rose-300 border-rose-500/30'
             }`}
-            title="Toggle On Duty status"
           >
-            <span className={`w-2 h-2 rounded-full ${isOnDuty ? 'bg-emerald-400 animate-pulse' : 'bg-slate-500'}`} />
-            <span className="hidden md:inline">{isOnDuty ? 'On Duty' : 'Off Duty'}</span>
+            <span
+              className={`w-2 h-2 rounded-full ${isOnDuty ? 'bg-emerald-400 animate-pulse' : 'bg-rose-400'}`}
+            />
+            <span>{isOnDuty ? 'On Duty' : 'Off Duty'}</span>
           </button>
         )}
 
-        {/* Role status pill */}
-        {!isDoctor && (
-          <button
-            onClick={onOpenAuthModal}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-semibold hover:bg-amber-500/30 transition-all"
-          >
-            <ShieldAlert className="w-3.5 h-3.5" />
-            <span>Switch to Doctor Role</span>
-          </button>
-        )}
-
-        {/* Notifications Dropdown */}
+        {/* User Profile Menu */}
         <div className="relative">
           <button
-            onClick={() => setShowNotifications(!showNotifications)}
-            className="relative p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white hover:border-slate-700 transition-colors"
-          >
-            <Bell className="w-4 h-4" />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-teal-400 animate-ping" />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-teal-400" />
-          </button>
-
-          {showNotifications && (
-            <div className="absolute right-0 mt-3 w-80 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl z-50 overflow-hidden">
-              <div className="p-3 border-b border-slate-800 flex justify-between items-center bg-slate-950/60">
-                <span className="text-sm font-semibold text-white">Notifications</span>
-                <span className="text-xs text-teal-400 font-medium">3 New</span>
-              </div>
-              <div className="divide-y divide-slate-800/60 max-h-72 overflow-y-auto">
-                {notifications.map(n => (
-                  <div key={n.id} className="p-3 hover:bg-slate-800/40 transition-colors">
-                    <div className="flex justify-between items-start">
-                      <span className="text-xs font-semibold text-white">{n.title}</span>
-                      <span className="text-[10px] text-slate-500">{n.time}</span>
-                    </div>
-                    <p className="text-xs text-slate-400 mt-1">{n.desc}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Doctor Profile Chip */}
-        <div className="relative">
-          <button
-            onClick={() => setShowProfileMenu(!showProfileMenu)}
-            className="flex items-center gap-3 p-1.5 pl-2 pr-3 rounded-2xl bg-slate-900 border border-slate-800 hover:border-teal-500/40 transition-all group"
+            onClick={() => setShowProfileMenu(prev => !prev)}
+            className="flex items-center gap-2 p-1 rounded-2xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition-colors"
           >
             <img
-              src={doctorProfile?.avatar || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=200'}
-              alt="Doctor Avatar"
-              className="w-8 h-8 rounded-xl object-cover border border-teal-500/30 group-hover:scale-105 transition-transform"
+              src={avatarUrl}
+              alt={displayName}
+              className="w-8 h-8 rounded-xl object-cover border border-teal-500/40"
             />
-            <div className="text-left hidden md:block">
-              <div className="text-xs font-bold text-slate-200 group-hover:text-teal-300 transition-colors">
-                {doctorProfile?.fullName || user?.name || 'Dr. Sarah Jenkins'}
-              </div>
-              <div className="text-[10px] text-slate-400">
-                {doctorProfile?.specialization || 'Cardiology'}
-              </div>
+            <div className="hidden md:block text-left pr-1">
+              <p className="text-xs font-bold text-white leading-tight truncate max-w-[130px]">{displayName}</p>
+              <p className="text-[10px] text-teal-400 font-mono capitalize">{user?.role || 'User'}</p>
             </div>
+            <ChevronDown className="w-3.5 h-3.5 text-slate-400 pr-1" />
           </button>
 
+          {/* Profile Dropdown */}
           {showProfileMenu && (
-            <div className="absolute right-0 mt-3 w-56 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl z-50 p-2">
-              <div className="p-3 border-b border-slate-800/80 mb-1">
-                <p className="text-xs font-bold text-white">{doctorProfile?.fullName || 'Dr. Sarah Jenkins'}</p>
-                <p className="text-[11px] text-slate-400 truncate">{doctorProfile?.email || 'sarah.jenkins@hospital.org'}</p>
+            <div className="absolute right-0 mt-2 w-56 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-2 space-y-1 text-xs z-50 animate-fadeIn">
+              <div className="p-2.5 border-b border-slate-800 mb-1">
+                <p className="font-bold text-white truncate">{displayName}</p>
+                <p className="text-[11px] text-slate-400 truncate">{user?.email}</p>
               </div>
+
               <button
                 onClick={() => {
                   setActiveTab('profile');
                   setShowProfileMenu(false);
                 }}
-                className="w-full text-left px-3 py-2 text-xs font-medium text-slate-300 hover:bg-slate-800 rounded-xl flex items-center gap-2 transition-colors"
+                className="w-full p-2 rounded-xl text-left text-slate-300 hover:bg-slate-800 hover:text-white flex items-center gap-2"
               >
-                <User className="w-4 h-4 text-teal-400" />
-                View & Edit Profile
+                <User className="w-3.5 h-3.5 text-teal-400" />
+                <span>My Profile</span>
               </button>
+
               <button
                 onClick={() => {
+                  setShowProfileMenu(false);
                   onOpenAuthModal();
-                  setShowProfileMenu(false);
                 }}
-                className="w-full text-left px-3 py-2 text-xs font-medium text-slate-300 hover:bg-slate-800 rounded-xl flex items-center gap-2 transition-colors"
+                className="w-full p-2 rounded-xl text-left text-slate-300 hover:bg-slate-800 hover:text-white flex items-center gap-2"
               >
-                <ShieldAlert className="w-4 h-4 text-amber-400" />
-                Switch User / Role
+                <ShieldCheck className="w-3.5 h-3.5 text-cyan-400" />
+                <span>Switch Role (Doctor/Patient)</span>
               </button>
-              <button
-                onClick={() => {
-                  logout();
-                  setShowProfileMenu(false);
-                }}
-                className="w-full text-left px-3 py-2 text-xs font-medium text-rose-400 hover:bg-rose-500/10 rounded-xl flex items-center gap-2 transition-colors mt-1"
-              >
-                <LogOut className="w-4 h-4" />
-                Logout
-              </button>
+
+              <div className="pt-1 border-t border-slate-800">
+                <button
+                  onClick={() => {
+                    setShowProfileMenu(false);
+                    logout();
+                    window.location.reload();
+                  }}
+                  className="w-full p-2 rounded-xl text-left text-rose-400 hover:bg-rose-500/10 flex items-center gap-2 font-semibold"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  <span>Log Out</span>
+                </button>
+              </div>
             </div>
           )}
         </div>
