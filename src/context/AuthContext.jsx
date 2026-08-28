@@ -50,8 +50,34 @@ export function AuthProvider({ children }) {
         const profile = await api.getPatientProfile(loggedUser.patientId);
         setPatientProfile(profile);
         setDoctorProfile(null);
+      } else {
+        setDoctorProfile(null);
+        setPatientProfile(null);
       }
       return loggedUser;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const register = async (formData) => {
+    setLoading(true);
+    try {
+      const registeredUser = await api.register(formData);
+      setUser(registeredUser);
+      if (registeredUser.role === 'doctor') {
+        const profile = await api.getCurrentDoctorProfile(registeredUser.doctorId);
+        setDoctorProfile(profile);
+        setPatientProfile(null);
+      } else if (registeredUser.role === 'patient') {
+        const profile = await api.getPatientProfile(registeredUser.patientId);
+        setPatientProfile(profile);
+        setDoctorProfile(null);
+      } else {
+        setDoctorProfile(null);
+        setPatientProfile(null);
+      }
+      return registeredUser;
     } finally {
       setLoading(false);
     }
@@ -78,6 +104,7 @@ export function AuthProvider({ children }) {
     setIsOnDuty(prev => !prev);
   };
 
+  const isAdmin = user?.role === 'admin';
   const isDoctor = user?.role === 'doctor';
   const isPatient = user?.role === 'patient';
 
@@ -87,12 +114,14 @@ export function AuthProvider({ children }) {
         user,
         doctorProfile,
         patientProfile,
+        isAdmin,
         isDoctor,
         isPatient,
         loading,
         isOnDuty,
         toggleDutyStatus,
         login,
+        register,
         logout,
         refreshProfile
       }}

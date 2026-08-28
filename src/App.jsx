@@ -1,10 +1,17 @@
-// Main Hospital Management System Application (Doctor & Patient Modules)
+// Main Hospital Management System Application (Multilingual + Admin + Doctor + Patient)
 
 import React, { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext.jsx';
+import { LanguageProvider, useLanguage } from './context/LanguageContext.jsx';
 import { ToastProvider, useToast } from './components/common/ToastContainer.jsx';
 import { Navbar } from './components/layout/Navbar.jsx';
 import { Sidebar } from './components/layout/Sidebar.jsx';
+
+// Auth Component
+import { AuthPage } from './components/auth/AuthPage.jsx';
+
+// Admin Components
+import { AdminDashboard } from './components/admin/AdminDashboard.jsx';
 
 // Doctor Components
 import { DoctorDashboard } from './components/doctor/DoctorDashboard.jsx';
@@ -23,14 +30,14 @@ import { BookAppointmentModal } from './components/patient/BookAppointmentModal.
 import { PatientAppointments } from './components/patient/PatientAppointments.jsx';
 import { PatientAppointmentDetailsModal } from './components/patient/PatientAppointmentDetailsModal.jsx';
 import { CancelConfirmModal } from './components/patient/CancelConfirmModal.jsx';
-import { PatientLoginModal } from './components/auth/PatientLoginModal.jsx';
 
 import { api } from './services/api.js';
 import { Spinner } from './components/common/LoadingSkeleton.jsx';
-import { ShieldAlert, Stethoscope, Lock, LayoutDashboard, Calendar, Users, UserCheck, Search, Heart } from 'lucide-react';
+import { LayoutDashboard, Calendar, Users, UserCheck, Search, Stethoscope, Building2, BarChart3, ShieldCheck } from 'lucide-react';
 
 function MainWorkspace() {
-  const { user, isDoctor, isPatient, loading: authLoading } = useAuth();
+  const { user, isAdmin, isDoctor, isPatient, loading: authLoading } = useAuth();
+  const { t } = useLanguage();
   const { showToast } = useToast();
 
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -46,19 +53,31 @@ function MainWorkspace() {
   const [selectedPatientAppointment, setSelectedPatientAppointment] = useState(null);
   const [cancelTargetAppointment, setCancelTargetAppointment] = useState(null);
 
-  // Auth / Role Switcher Modal
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  // Auth / Role Switcher state
+  const [showAuthScreen, setShowAuthScreen] = useState(false);
 
   // Count metrics for sidebar badges
   const [counts, setCounts] = useState({
     todayAppointments: 0,
     totalPatients: 0,
+    totalDoctors: 0,
+    pendingAppointments: 0,
+    totalDepartments: 0,
     upcomingCount: 0
   });
 
   const loadCounts = async () => {
     try {
-      if (isDoctor && user?.doctorId) {
+      if (isAdmin) {
+        const stats = await api.getAdminStats();
+        setCounts(prev => ({
+          ...prev,
+          totalDoctors: stats.totalDoctors,
+          totalPatients: stats.totalPatients,
+          pendingAppointments: stats.pendingAppointments,
+          totalDepartments: stats.totalDepartments
+        }));
+      } else if (isDoctor && user?.doctorId) {
         const stats = await api.getDoctorStats(user.doctorId);
         setCounts(prev => ({
           ...prev,
@@ -73,7 +92,7 @@ function MainWorkspace() {
         }));
       }
     } catch (err) {
-      console.error('Error fetching sidebar count metrics:', err);
+      console.error('Error fetching count metrics:', err);
     }
   };
 
@@ -81,14 +100,26 @@ function MainWorkspace() {
     if (user) {
       loadCounts();
     }
-  }, [user, isDoctor, isPatient, activeTab, isBookingOpen, cancelTargetAppointment]);
+  }, [user, isAdmin, isDoctor, isPatient, activeTab, isBookingOpen, cancelTargetAppointment]);
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center space-y-4 text-white">
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center space-y-4 text-white font-sans">
         <Spinner size="lg" />
-        <p className="text-xs text-slate-400 font-mono">Initializing Hospital Management Portal...</p>
+        <p className="text-xs text-slate-400 font-mono">Initializing MedPulse Care Portal...</p>
       </div>
+    );
+  }
+
+  // If user is not logged in or explicitly requested Auth Screen
+  if (!user || showAuthScreen) {
+    return (
+      <AuthPage
+        onAuthSuccess={() => {
+          setShowAuthScreen(false);
+          setActiveTab('dashboard');
+        }}
+      />
     );
   }
 
@@ -98,12 +129,12 @@ function MainWorkspace() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans antialiased selection:bg-teal-500 selection:text-slate-950">
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans antialiased selection:bg-sky-500 selection:text-slate-950">
       {/* Top Navbar */}
       <Navbar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        onOpenAuthModal={() => setIsAuthModalOpen(true)}
+        onOpenAuthModal={() => setShowAuthScreen(true)}
         onBookAppointment={() => handleOpenBooking()}
       />
 
@@ -119,73 +150,139 @@ function MainWorkspace() {
         {/* Main Content Area */}
         <main className="flex-1 p-4 md:p-8 max-w-7xl mx-auto w-full overflow-x-hidden">
           {/* Mobile Tab Navigator */}
-          <div className="md:hidden flex overflow-x-auto gap-2 pb-4 mb-4 border-b border-slate-800">
+          <div className="md:hidden flex overflow-x-auto gap-2 pb-3 mb-4 border-b border-slate-800">
             <button
               onClick={() => setActiveTab('dashboard')}
               className={`px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap flex items-center gap-1.5 ${
-                activeTab === 'dashboard' ? 'bg-teal-500 text-slate-950' : 'bg-slate-900 text-slate-400'
+                activeTab === 'dashboard' ? 'bg-sky-500 text-slate-950' : 'bg-slate-900 text-slate-400'
               }`}
             >
               <LayoutDashboard className="w-3.5 h-3.5" />
-              <span>Dashboard</span>
+              <span>{t('navDashboard')}</span>
             </button>
 
-            {isPatient ? (
+            {isAdmin && (
               <>
                 <button
-                  onClick={() => setActiveTab('findDoctors')}
+                  onClick={() => setActiveTab('doctors')}
                   className={`px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap flex items-center gap-1.5 ${
-                    activeTab === 'findDoctors' ? 'bg-teal-500 text-slate-950' : 'bg-slate-900 text-slate-400'
+                    activeTab === 'doctors' ? 'bg-sky-500 text-slate-950' : 'bg-slate-900 text-slate-400'
                   }`}
                 >
-                  <Search className="w-3.5 h-3.5" />
-                  <span>Find Doctors</span>
-                </button>
-                <button
-                  onClick={() => setActiveTab('appointments')}
-                  className={`px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap flex items-center gap-1.5 ${
-                    activeTab === 'appointments' ? 'bg-teal-500 text-slate-950' : 'bg-slate-900 text-slate-400'
-                  }`}
-                >
-                  <Calendar className="w-3.5 h-3.5" />
-                  <span>Appointments</span>
-                </button>
-              </>
-            ) : (
-              <>
-                <button
-                  onClick={() => setActiveTab('appointments')}
-                  className={`px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap flex items-center gap-1.5 ${
-                    activeTab === 'appointments' ? 'bg-teal-500 text-slate-950' : 'bg-slate-900 text-slate-400'
-                  }`}
-                >
-                  <Calendar className="w-3.5 h-3.5" />
-                  <span>Consultations</span>
+                  <Stethoscope className="w-3.5 h-3.5" />
+                  <span>{t('navDoctors')}</span>
                 </button>
                 <button
                   onClick={() => setActiveTab('patients')}
                   className={`px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap flex items-center gap-1.5 ${
-                    activeTab === 'patients' ? 'bg-teal-500 text-slate-950' : 'bg-slate-900 text-slate-400'
+                    activeTab === 'patients' ? 'bg-sky-500 text-slate-950' : 'bg-slate-900 text-slate-400'
                   }`}
                 >
                   <Users className="w-3.5 h-3.5" />
-                  <span>My Patients</span>
+                  <span>{t('navPatients')}</span>
+                </button>
+                <button
+                  onClick={() => setActiveTab('appointments')}
+                  className={`px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap flex items-center gap-1.5 ${
+                    activeTab === 'appointments' ? 'bg-sky-500 text-slate-950' : 'bg-slate-900 text-slate-400'
+                  }`}
+                >
+                  <Calendar className="w-3.5 h-3.5" />
+                  <span>{t('navAppointments')}</span>
                 </button>
               </>
             )}
 
-            <button
-              onClick={() => setActiveTab('profile')}
-              className={`px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap flex items-center gap-1.5 ${
-                activeTab === 'profile' ? 'bg-teal-500 text-slate-950' : 'bg-slate-900 text-slate-400'
-              }`}
-            >
-              <UserCheck className="w-3.5 h-3.5" />
-              <span>Profile</span>
-            </button>
+            {isPatient && (
+              <>
+                <button
+                  onClick={() => setActiveTab('findDoctors')}
+                  className={`px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap flex items-center gap-1.5 ${
+                    activeTab === 'findDoctors' ? 'bg-sky-500 text-slate-950' : 'bg-slate-900 text-slate-400'
+                  }`}
+                >
+                  <Search className="w-3.5 h-3.5" />
+                  <span>{t('navFindDoctors')}</span>
+                </button>
+                <button
+                  onClick={() => setActiveTab('appointments')}
+                  className={`px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap flex items-center gap-1.5 ${
+                    activeTab === 'appointments' ? 'bg-sky-500 text-slate-950' : 'bg-slate-900 text-slate-400'
+                  }`}
+                >
+                  <Calendar className="w-3.5 h-3.5" />
+                  <span>{t('navAppointments')}</span>
+                </button>
+                <button
+                  onClick={() => setActiveTab('profile')}
+                  className={`px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap flex items-center gap-1.5 ${
+                    activeTab === 'profile' ? 'bg-sky-500 text-slate-950' : 'bg-slate-900 text-slate-400'
+                  }`}
+                >
+                  <UserCheck className="w-3.5 h-3.5" />
+                  <span>{t('navProfile')}</span>
+                </button>
+              </>
+            )}
+
+            {isDoctor && (
+              <>
+                <button
+                  onClick={() => setActiveTab('appointments')}
+                  className={`px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap flex items-center gap-1.5 ${
+                    activeTab === 'appointments' ? 'bg-sky-500 text-slate-950' : 'bg-slate-900 text-slate-400'
+                  }`}
+                >
+                  <Calendar className="w-3.5 h-3.5" />
+                  <span>{t('navAppointments')}</span>
+                </button>
+                <button
+                  onClick={() => setActiveTab('patients')}
+                  className={`px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap flex items-center gap-1.5 ${
+                    activeTab === 'patients' ? 'bg-sky-500 text-slate-950' : 'bg-slate-900 text-slate-400'
+                  }`}
+                >
+                  <Users className="w-3.5 h-3.5" />
+                  <span>{t('navPatients')}</span>
+                </button>
+                <button
+                  onClick={() => setActiveTab('profile')}
+                  className={`px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap flex items-center gap-1.5 ${
+                    activeTab === 'profile' ? 'bg-sky-500 text-slate-950' : 'bg-slate-900 text-slate-400'
+                  }`}
+                >
+                  <UserCheck className="w-3.5 h-3.5" />
+                  <span>{t('navProfile')}</span>
+                </button>
+              </>
+            )}
           </div>
 
           {/* Active View Router */}
+
+          {/* ADMIN VIEWS */}
+          {isAdmin && (
+            <>
+              {activeTab === 'dashboard' && <AdminDashboard setActiveTab={setActiveTab} />}
+              {activeTab === 'doctors' && (
+                <FindDoctors
+                  onBookAppointment={(doc) => handleOpenBooking(doc)}
+                  onSelectDoctor={(doc) => setSelectedDoctorDetails(doc)}
+                />
+              )}
+              {activeTab === 'patients' && (
+                <PatientsList onSelectPatient={(patientId) => setSelectedDoctorPatientId(patientId)} />
+              )}
+              {activeTab === 'appointments' && (
+                <AppointmentsList
+                  onSelectAppointmentForDiagnosis={(appt) => setDiagnosisAppointment(appt)}
+                  onSelectPatient={(patientId) => setSelectedDoctorPatientId(patientId)}
+                />
+              )}
+              {activeTab === 'departments' && <AdminDashboard setActiveTab={setActiveTab} />}
+              {activeTab === 'statistics' && <AdminDashboard setActiveTab={setActiveTab} />}
+            </>
+          )}
 
           {/* PATIENT VIEWS */}
           {isPatient && (
@@ -248,7 +345,7 @@ function MainWorkspace() {
 
       {/* Shared & Role Specific Modals */}
 
-      {/* Doctor Modals */}
+      {/* Doctor & Admin Modals */}
       {selectedDoctorPatientId && (
         <PatientDetailsModal
           patientId={selectedDoctorPatientId}
@@ -268,7 +365,7 @@ function MainWorkspace() {
         />
       )}
 
-      {/* Patient Modals */}
+      {/* Patient & Shared Modals */}
       {selectedDoctorDetails && (
         <DoctorDetailsModal
           doctor={selectedDoctorDetails}
@@ -309,9 +406,6 @@ function MainWorkspace() {
           }}
         />
       )}
-
-      {/* Role / Login Switcher Modal */}
-      <PatientLoginModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
     </div>
   );
 }
@@ -319,9 +413,11 @@ function MainWorkspace() {
 export default function App() {
   return (
     <ToastProvider>
-      <AuthProvider>
-        <MainWorkspace />
-      </AuthProvider>
+      <LanguageProvider>
+        <AuthProvider>
+          <MainWorkspace />
+        </AuthProvider>
+      </LanguageProvider>
     </ToastProvider>
   );
 }

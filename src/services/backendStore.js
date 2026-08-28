@@ -283,6 +283,17 @@ const INITIAL_APPOINTMENTS = [
   }
 ];
 
+const INITIAL_ADMINS = [
+  {
+    id: 'admin-001',
+    userId: 'user-admin-1',
+    fullName: 'System Administrator',
+    email: 'admin@hospital.org',
+    role: 'admin',
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200'
+  }
+];
+
 // Seed Helper
 export function initializeBackendStore() {
   if (!localStorage.getItem(STORAGE_KEYS.DOCTORS)) {
@@ -294,8 +305,11 @@ export function initializeBackendStore() {
   if (!localStorage.getItem(STORAGE_KEYS.APPOINTMENTS)) {
     localStorage.setItem(STORAGE_KEYS.APPOINTMENTS, JSON.stringify(INITIAL_APPOINTMENTS));
   }
+  if (!localStorage.getItem('hms_admins')) {
+    localStorage.setItem('hms_admins', JSON.stringify(INITIAL_ADMINS));
+  }
   if (!localStorage.getItem(STORAGE_KEYS.CURRENT_USER)) {
-    // Default logged in user (Patient role default, can switch to Doctor)
+    // Default logged in user (Patient role default, can switch to Doctor or Admin)
     const defaultUser = {
       id: 'user-pat-1',
       patientId: 'pat-201',
@@ -317,6 +331,120 @@ export function getStoredDoctors() {
 export function getStoredPatients() {
   initializeBackendStore();
   return JSON.parse(localStorage.getItem(STORAGE_KEYS.PATIENTS) || '[]');
+}
+
+export function getStoredAdmins() {
+  initializeBackendStore();
+  return JSON.parse(localStorage.getItem('hms_admins') || '[]');
+}
+
+export function registerStoredUser(formData) {
+  const { role, email, fullName, phone, specialization, department, age, gender, bloodGroup } = formData;
+
+  const doctors = getStoredDoctors();
+  const patients = getStoredPatients();
+  const admins = getStoredAdmins();
+
+  const normalizedEmail = email.trim().toLowerCase();
+
+  const emailExists =
+    doctors.some(d => d.email.toLowerCase() === normalizedEmail) ||
+    patients.some(p => p.email.toLowerCase() === normalizedEmail) ||
+    admins.some(a => a.email.toLowerCase() === normalizedEmail);
+
+  if (emailExists) {
+    throw new Error('An account with this email address already exists.');
+  }
+
+  let createdUser = null;
+
+  if (role === 'doctor') {
+    const newDocId = `doc-${Date.now()}`;
+    const newUserId = `user-doc-${Date.now()}`;
+    const newDoc = {
+      id: newDocId,
+      userId: newUserId,
+      fullName: fullName.trim(),
+      email: normalizedEmail,
+      phone: phone || '+1 (555) 123-4567',
+      specialization: specialization || 'General Medicine',
+      department: department || 'Cardiovascular Care',
+      experience: '1 Year',
+      biography: 'Newly registered medical practitioner.',
+      workingDays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+      workingHours: '09:00 AM - 05:00 PM',
+      avatar: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=300',
+      rating: 5.0,
+      roomNo: 'Cabinet 101, Main Wing'
+    };
+    doctors.push(newDoc);
+    localStorage.setItem(STORAGE_KEYS.DOCTORS, JSON.stringify(doctors));
+
+    createdUser = {
+      id: newUserId,
+      doctorId: newDocId,
+      name: newDoc.fullName,
+      email: newDoc.email,
+      role: 'doctor',
+      token: `jwt_token_${newDocId}_${Date.now()}`
+    };
+  } else if (role === 'admin') {
+    const newAdminId = `admin-${Date.now()}`;
+    const newUserId = `user-admin-${Date.now()}`;
+    const newAdmin = {
+      id: newAdminId,
+      userId: newUserId,
+      fullName: fullName.trim(),
+      email: normalizedEmail,
+      role: 'admin',
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200'
+    };
+    admins.push(newAdmin);
+    localStorage.setItem('hms_admins', JSON.stringify(admins));
+
+    createdUser = {
+      id: newUserId,
+      name: newAdmin.fullName,
+      email: newAdmin.email,
+      role: 'admin',
+      token: `jwt_admin_token_${newAdminId}_${Date.now()}`
+    };
+  } else {
+    // Default to patient
+    const newPatId = `pat-${Date.now()}`;
+    const newUserId = `user-pat-${Date.now()}`;
+    const newPat = {
+      id: newPatId,
+      userId: newUserId,
+      fullName: fullName.trim(),
+      age: parseInt(age) || 30,
+      dateOfBirth: '1996-01-01',
+      gender: gender || 'Female',
+      phone: phone || '+1 (555) 000-1122',
+      email: normalizedEmail,
+      address: 'Hospital Registration Address',
+      avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=200',
+      bloodGroup: bloodGroup || 'O+',
+      allergies: ['None'],
+      emergencyContact: 'Family Member - +1 (555) 999-0000',
+      doctorId: 'doc-101',
+      medicalHistory: []
+    };
+    patients.push(newPat);
+    localStorage.setItem(STORAGE_KEYS.PATIENTS, JSON.stringify(patients));
+
+    createdUser = {
+      id: newUserId,
+      patientId: newPatId,
+      name: newPat.fullName,
+      email: newPat.email,
+      role: 'patient',
+      token: `jwt_token_${newPatId}_${Date.now()}`
+    };
+  }
+
+  setCurrentUser(createdUser);
+  return createdUser;
 }
 
 export function getStoredAppointments() {
