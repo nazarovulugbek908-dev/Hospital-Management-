@@ -5,9 +5,9 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import { useLanguage } from '../../context/LanguageContext.jsx';
 import {
   LayoutDashboard,
-  Users,
-  Calendar,
   UserCheck,
+  Calendar,
+  Users,
   Search,
   Stethoscope,
   Building2,
@@ -23,80 +23,50 @@ export function Sidebar({ activeTab, setActiveTab, counts = {}, onBookAppointmen
   const { t } = useLanguage();
 
   const adminNav = [
-    { id: 'dashboard', label: t('navDashboard'), icon: LayoutDashboard, badge: null },
-    { id: 'doctors', label: t('navDoctors'), icon: Stethoscope, badge: counts.totalDoctors || null },
-    { id: 'patients', label: t('navPatients'), icon: Users, badge: counts.totalPatients || null },
-    { id: 'appointments', label: t('navAppointments'), icon: Calendar, badge: counts.pendingAppointments || null },
-    { id: 'departments', label: t('navDepartments'), icon: Building2, badge: counts.totalDepartments || null },
-    { id: 'statistics', label: t('navStatistics'), icon: BarChart3, badge: null }
+    { id: 'dashboard', label: t('navDashboard'), icon: LayoutDashboard },
+    { id: 'doctors', label: t('navDoctors'), icon: Stethoscope, badge: counts.totalDoctors },
+    { id: 'patients', label: t('navPatients'), icon: Users, badge: counts.totalPatients },
+    { id: 'appointments', label: t('navAppointments'), icon: Calendar, badge: counts.pendingAppointments },
+    { id: 'departments', label: t('totalDepartments'), icon: Building2, badge: counts.totalDepartments },
+    { id: 'statistics', label: t('navStatistics'), icon: BarChart3 }
   ];
 
   const doctorNav = [
-    { id: 'dashboard', label: t('navDashboard'), icon: LayoutDashboard, badge: null },
-    { id: 'appointments', label: t('navAppointments'), icon: Calendar, badge: counts.todayAppointments > 0 ? counts.todayAppointments : null },
-    { id: 'patients', label: t('navPatients'), icon: Users, badge: counts.totalPatients > 0 ? counts.totalPatients : null },
-    { id: 'profile', label: t('navProfile'), icon: UserCheck, badge: null }
+    { id: 'dashboard', label: t('navDashboard'), icon: LayoutDashboard },
+    { id: 'appointments', label: t('navAppointments'), icon: Calendar, badge: counts.todayAppointments },
+    { id: 'patients', label: t('navPatients'), icon: Users, badge: counts.totalPatients },
+    { id: 'profile', label: t('navProfile'), icon: UserCheck }
   ];
 
   const patientNav = [
-    { id: 'dashboard', label: t('navDashboard'), icon: LayoutDashboard, badge: null },
-    { id: 'findDoctors', label: t('navFindDoctors'), icon: Search, badge: null },
-    { id: 'appointments', label: t('navAppointments'), icon: Calendar, badge: counts.upcomingCount > 0 ? counts.upcomingCount : null },
-    { id: 'profile', label: t('navProfile'), icon: UserCheck, badge: null }
+    { id: 'dashboard', label: t('navDashboard'), icon: LayoutDashboard },
+    { id: 'findDoctors', label: t('navFindDoctors'), icon: Search },
+    { id: 'appointments', label: t('navAppointments'), icon: Calendar, badge: counts.upcomingCount },
+    { id: 'profile', label: t('navProfile'), icon: UserCheck }
   ];
 
-  const currentNav = isAdmin ? adminNav : isDoctor ? doctorNav : patientNav;
-
-  const displayName = isAdmin
-    ? user?.name || 'System Administrator'
-    : isDoctor
-    ? doctorProfile?.fullName || user?.name || 'Dr. Sarah Jenkins'
-    : patientProfile?.fullName || user?.name || 'Eleanor Vance';
-
-  const avatarUrl = isAdmin
-    ? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200'
-    : isDoctor
-    ? doctorProfile?.avatar || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=300'
-    : patientProfile?.avatar || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=200';
-
-  const roleKey = isAdmin ? 'admin' : isDoctor ? 'doctor' : 'patient';
+  const navItems = isAdmin ? adminNav : isDoctor ? doctorNav : patientNav;
 
   return (
-    <aside className="hidden md:flex flex-col w-64 bg-slate-950 border-r border-slate-800 min-h-[calc(100vh-65px)] p-4 space-y-6 flex-shrink-0">
-      {/* User Identity Header Card */}
-      <div className="p-4 rounded-3xl bg-slate-900/80 border border-slate-800 space-y-3 shadow-sm">
-        <div className="flex items-center gap-3">
-          <img
-            src={avatarUrl}
-            alt={displayName}
-            className="w-11 h-11 rounded-2xl object-cover border border-sky-500/30 shadow-md"
-          />
-          <div className="space-y-0.5 overflow-hidden">
-            <h4 className="text-xs font-bold text-white truncate">{displayName}</h4>
-            <span className="inline-block px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20 text-[10px] font-bold uppercase">
-              {t(roleKey)}
-            </span>
-          </div>
-        </div>
+    <aside className="hidden md:flex flex-col w-64 bg-slate-950 border-r border-slate-800/80 p-4 space-y-6 min-h-[calc(100vh-65px)]">
+      {/* Patient Quick Action */}
+      {isPatient && (
+        <button
+          onClick={() => onBookAppointment && onBookAppointment()}
+          className="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-sky-500 to-teal-500 hover:from-sky-400 hover:to-teal-400 text-slate-950 font-bold text-xs shadow-lg shadow-sky-500/20 flex items-center justify-center gap-2 transition-all"
+        >
+          <PlusCircle className="w-4 h-4 stroke-[2.5]" />
+          <span>{t('bookAppointment')}</span>
+        </button>
+      )}
 
-        {isPatient && onBookAppointment && (
-          <button
-            onClick={() => onBookAppointment()}
-            className="w-full py-2.5 rounded-xl bg-gradient-to-r from-sky-500 to-teal-500 hover:from-sky-400 hover:to-teal-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-1.5 shadow-md shadow-sky-500/20 transition-all transform active:scale-95"
-          >
-            <PlusCircle className="w-4 h-4" />
-            <span>{t('bookAppointment')}</span>
-          </button>
-        )}
-      </div>
-
-      {/* Role Navigation Links */}
-      <div className="space-y-1">
-        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-3 mb-2">
-          {t(roleKey)} Navigation
+      {/* Navigation Groups */}
+      <div className="space-y-1 flex-1">
+        <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2">
+          {isAdmin ? 'Administration' : isDoctor ? 'Clinical Panel' : 'Patient Services'}
         </p>
 
-        {currentNav.map((item) => {
+        {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
 
@@ -104,19 +74,23 @@ export function Sidebar({ activeTab, setActiveTab, counts = {}, onBookAppointmen
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
-              className={`w-full flex items-center justify-between px-3.5 py-3 rounded-2xl text-xs font-bold transition-all ${
+              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all ${
                 isActive
-                  ? 'bg-gradient-to-r from-sky-500/20 via-sky-500/10 to-transparent text-sky-300 border border-sky-500/30 shadow-md shadow-sky-500/10'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60 border border-transparent'
+                  ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30'
+                  : 'text-slate-400 hover:bg-slate-900 hover:text-slate-200'
               }`}
             >
               <div className="flex items-center gap-3">
-                <Icon className={`w-4 h-4 ${isActive ? 'text-sky-400' : 'text-slate-400'}`} />
+                <Icon className={`w-4 h-4 ${isActive ? 'text-sky-400' : 'text-slate-500'}`} />
                 <span>{item.label}</span>
               </div>
 
-              {item.badge && (
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-sky-500 text-slate-950">
+              {item.badge > 0 && (
+                <span
+                  className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${
+                    isActive ? 'bg-sky-500 text-slate-950' : 'bg-slate-800 text-slate-400'
+                  }`}
+                >
                   {item.badge}
                 </span>
               )}
@@ -125,13 +99,31 @@ export function Sidebar({ activeTab, setActiveTab, counts = {}, onBookAppointmen
         })}
       </div>
 
-      {/* Logout Footer Button */}
-      <div className="mt-auto pt-4 border-t border-slate-800">
+      {/* User Card & Logout */}
+      <div className="pt-4 border-t border-slate-800 space-y-3">
+        <div className="p-3 rounded-2xl bg-slate-900/60 border border-slate-800 flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-sky-500/20 text-sky-400 flex items-center justify-center font-bold text-xs border border-sky-500/30">
+            {isAdmin ? 'AD' : isDoctor ? 'DR' : 'PT'}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-bold text-white truncate">
+              {isAdmin
+                ? 'Admin User'
+                : isDoctor
+                ? (doctorProfile?.fullName || 'Dr. Sarah')
+                : (patientProfile?.fullName || 'Eleanor Vance')}
+            </p>
+            <p className="text-[10px] text-slate-400 truncate">
+              {isAdmin ? 'Full System Access' : isDoctor ? (doctorProfile?.department || 'Medical Staff') : 'Patient Member'}
+            </p>
+          </div>
+        </div>
+
         <button
           onClick={logout}
-          className="w-full flex items-center gap-2 px-3.5 py-2.5 rounded-2xl text-xs font-bold text-rose-400 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 transition-all"
+          className="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-bold text-rose-400 hover:bg-rose-500/10 border border-rose-500/20 transition-all"
         >
-          <LogOut className="w-4 h-4" />
+          <LogOut className="w-3.5 h-3.5" />
           <span>{t('logout')}</span>
         </button>
       </div>

@@ -1,4 +1,4 @@
-// Auth Context supporting both Doctor and Patient roles
+// Auth Context supporting Admin, Doctor, and Patient roles
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { getCurrentUser, setCurrentUser } from '../services/backendStore.js';
@@ -30,7 +30,7 @@ export function AuthProvider({ children }) {
         }
       } catch (err) {
         console.error('Failed to load authenticated user:', err);
-      } finally {
+      } font-sans finally {
         setLoading(false);
       }
     }

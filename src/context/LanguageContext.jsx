@@ -32,8 +32,14 @@ export function LanguageProvider({ children }) {
     return fallback || key;
   };
 
+  const languagesList = [
+    { code: 'uz', name: 'O‘zbekcha', flag: '🇺🇿' },
+    { code: 'ru', name: 'Русский', flag: '🇷🇺' },
+    { code: 'en', name: 'English', flag: '🇬🇧' }
+  ];
+
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+    <LanguageContext.Provider value={{ language, lang: language, setLanguage, setLang: setLanguage, t, languagesList }}>
       {children}
     </LanguageContext.Provider>
   );
