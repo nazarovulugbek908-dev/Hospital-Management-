@@ -121,11 +121,24 @@ export const initialDoctors = [
   }
 ];
 
+export const initialAdminUser = {
+  id: 'admin-01',
+  name: 'Hospital Administrator',
+  email: 'admin@hospital.com',
+  password: 'admin123',
+  phone: '+1 (555) 100-2000',
+  role: 'admin',
+  avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80',
+  department: 'Administration & Operations',
+  bio: 'Chief Medical Administrator overseeing staff coordination and patient clinical care operations.'
+};
+
 export const initialDemoPatient = {
   id: 'pat-101',
   name: 'John Williams',
   email: 'patient@hospital.com',
   password: 'patient123',
+  role: 'patient',
   phone: '+1 (555) 890-1234',
   dateOfBirth: '1988-05-14',
   gender: 'Male',
@@ -133,8 +146,80 @@ export const initialDemoPatient = {
   address: '742 Evergreen Terrace, Springfield, OR',
   avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=300&auto=format&fit=crop&q=80',
   emergencyContact: 'Sarah Williams (Wife) - +1 (555) 890-5678',
+  medicalCondition: 'Essential Hypertension',
+  status: 'Active',
+  registeredDate: '2026-01-15',
   bio: 'Patient prioritizing preventative cardiology checkups and active fitness lifestyle.'
 };
+
+export const initialPatients = [
+  initialDemoPatient,
+  {
+    id: 'pat-102',
+    name: 'Emma Watson',
+    email: 'emma.watson@gmail.com',
+    phone: '+1 (555) 765-4321',
+    dateOfBirth: '1992-09-22',
+    gender: 'Female',
+    bloodGroup: 'A+',
+    address: '124 Maple Avenue, Portland, OR',
+    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300&auto=format&fit=crop&q=80',
+    emergencyContact: 'David Watson (Father) - +1 (555) 765-1122',
+    medicalCondition: 'Tension Headaches & Migraine',
+    status: 'Active',
+    registeredDate: '2026-02-10',
+    bio: 'Under observation for screen fatigue and tension headaches.'
+  },
+  {
+    id: 'pat-103',
+    name: 'Alex Rivera',
+    email: 'alex.rivera@outlook.com',
+    phone: '+1 (555) 654-9870',
+    dateOfBirth: '1985-11-03',
+    gender: 'Male',
+    bloodGroup: 'B+',
+    address: '450 Oak Boulevard, Eugene, OR',
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80',
+    emergencyContact: 'Elena Rivera (Sister) - +1 (555) 654-3344',
+    medicalCondition: 'Post-ACL Recovery & Tendonitis',
+    status: 'Active',
+    registeredDate: '2026-03-01',
+    bio: 'Orthopedic rehabilitation patient recovering from sports ligament strain.'
+  },
+  {
+    id: 'pat-104',
+    name: 'Sophia Chen',
+    email: 'sophia.chen@yahoo.com',
+    phone: '+1 (555) 432-8765',
+    dateOfBirth: '1998-04-18',
+    gender: 'Female',
+    bloodGroup: 'AB+',
+    address: '89 Pine Grove Way, Salem, OR',
+    avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=300&auto=format&fit=crop&q=80',
+    emergencyContact: 'Mark Chen (Brother) - +1 (555) 432-9900',
+    medicalCondition: 'Seasonal Contact Dermatitis',
+    status: 'Active',
+    registeredDate: '2026-04-18',
+    bio: 'Dermatology consultation patient undergoing allergy treatment.'
+  },
+  {
+    id: 'pat-105',
+    name: 'Marcus Brody',
+    email: 'marcus.brody@medicare.org',
+    phone: '+1 (555) 321-7654',
+    dateOfBirth: '1976-07-29',
+    gender: 'Male',
+    bloodGroup: 'O-',
+    address: '310 Cedar Ridge, Beaverton, OR',
+    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300&auto=format&fit=crop&q=80',
+    emergencyContact: 'Linda Brody (Wife) - +1 (555) 321-0011',
+    medicalCondition: 'Annual Wellness & Cholesterol Review',
+    status: 'Inactive',
+    registeredDate: '2026-05-04',
+    bio: 'Routine primary care checkup patient.'
+  }
+];
+
 
 export const initialAppointments = [
   {

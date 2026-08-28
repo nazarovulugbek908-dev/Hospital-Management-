@@ -13,7 +13,8 @@ import {
   FileText,
   Calendar,
   ChevronDown,
-  Globe
+  Globe,
+  ShieldCheck
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useTheme } from '../../context/ThemeContext.jsx';
@@ -265,6 +266,26 @@ export function Navbar({ onOpenMobileMenu }) {
                   </div>
 
                   <div className="py-1 space-y-0.5 text-xs">
+                    {patient.role === 'admin' ? (
+                      <Link
+                        to="/admin/dashboard"
+                        onClick={() => setIsProfileOpen(false)}
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-blue-600 dark:text-blue-400 bg-blue-50/70 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors font-bold"
+                      >
+                        <ShieldCheck className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                        <span>{t('adminPortal')}</span>
+                      </Link>
+                    ) : (
+                      <Link
+                        to="/admin/dashboard"
+                        onClick={() => setIsProfileOpen(false)}
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors font-medium"
+                      >
+                        <ShieldCheck className="w-4 h-4 text-slate-400" />
+                        <span>{t('adminPortal')}</span>
+                      </Link>
+                    )}
+
                     <Link
                       to="/profile"
                       onClick={() => setIsProfileOpen(false)}

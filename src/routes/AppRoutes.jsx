@@ -2,8 +2,9 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 
-// Layout
+// Layouts
 import { PatientLayout } from '../layouts/PatientLayout.jsx';
+import { AdminLayout } from '../layouts/AdminLayout.jsx';
 
 // Public Pages
 import { Home } from '../pages/Home.jsx';
@@ -23,10 +24,18 @@ import { Profile } from '../pages/patient/Profile.jsx';
 import { Settings } from '../pages/patient/Settings.jsx';
 import { Notifications } from '../pages/notifications/Notifications.jsx';
 import { Todo } from '../pages/todo/Todo.jsx';
+
+// Admin Pages
+import { AdminDashboard } from '../pages/admin/AdminDashboard.jsx';
+import { AdminDoctors } from '../pages/admin/AdminDoctors.jsx';
+import { AdminPatients } from '../pages/admin/AdminPatients.jsx';
+import { AdminAppointments } from '../pages/admin/AdminAppointments.jsx';
+
+// 404
 import { NotFound } from '../pages/NotFound.jsx';
 
-function ProtectedRoute({ children }) {
-  const { isAuthenticated, loading } = useAuth();
+function ProtectedRoute({ children, requiredRole = null }) {
+  const { isAuthenticated, loading, role } = useAuth();
 
   if (loading) {
     return (
@@ -51,6 +60,20 @@ export function AppRoutes() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
+
+      {/* Admin Portal Pages (Under AdminLayout) */}
+      <Route
+        element={
+          <ProtectedRoute>
+            <AdminLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        <Route path="/admin/doctors" element={<AdminDoctors />} />
+        <Route path="/admin/patients" element={<AdminPatients />} />
+        <Route path="/admin/appointments" element={<AdminAppointments />} />
+      </Route>
 
       {/* Patient Portal Pages (Under PatientLayout) */}
       <Route
@@ -78,3 +101,4 @@ export function AppRoutes() {
     </Routes>
   );
 }
+

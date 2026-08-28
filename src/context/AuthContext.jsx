@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase.js';
-import { initialDemoPatient } from '../data/mockData.js';
+import { initialDemoPatient, initialAdminUser } from '../data/mockData.js';
 
 const AuthContext = createContext();
 
@@ -32,8 +32,10 @@ export function AuthProvider({ children }) {
       if (session?.user) {
         const u = session.user;
         const meta = u.user_metadata || {};
+        const isUserAdmin = meta.role === 'admin' || u.email?.toLowerCase().includes('admin');
         const mappedPatient = {
           id: u.id,
+          role: isUserAdmin ? 'admin' : (meta.role || 'patient'),
           name: meta.full_name || meta.name || u.email.split('@')[0],
           email: u.email,
           phone: meta.phone || '+1 (555) 000-0000',
@@ -43,7 +45,7 @@ export function AuthProvider({ children }) {
           address: meta.address || 'Springfield, OR',
           avatar: meta.avatar || `https://images.unsplash.com/photo-${meta.gender === 'Female' ? '1494790108377-be9c29b29330' : '1535713875002-d1d0cf377fde'}?w=300&auto=format&fit=crop&q=80`,
           emergencyContact: meta.emergency_contact || 'Family contact',
-          bio: meta.bio || 'MediCare verified patient member.'
+          bio: meta.bio || 'MediCare verified member.'
         };
         setPatient(mappedPatient);
       }
@@ -54,20 +56,27 @@ export function AuthProvider({ children }) {
     };
   }, []);
 
-  // Supabase Login
+  // Supabase / Demo Login
   const login = async (email, password) => {
     setLoading(true);
     const normalizedEmail = email.trim().toLowerCase();
 
-    // 1. Quick demo account check for instant testing
+    // 1. Admin demo account check
+    if (normalizedEmail === 'admin@hospital.com' && password === 'admin123') {
+      setPatient(initialAdminUser);
+      setLoading(false);
+      return { success: true, patient: initialAdminUser, role: 'admin' };
+    }
+
+    // 2. Patient demo account check
     if (normalizedEmail === 'patient@hospital.com' && password === 'patient123') {
       setPatient(initialDemoPatient);
       setLoading(false);
-      return { success: true, patient: initialDemoPatient };
+      return { success: true, patient: initialDemoPatient, role: 'patient' };
     }
 
     try {
-      // 2. Direct Supabase authentication
+      // 3. Direct Supabase authentication
       const { data, error } = await supabase.auth.signInWithPassword({
         email: normalizedEmail,
         password: password
@@ -80,8 +89,10 @@ export function AuthProvider({ children }) {
       if (data?.user) {
         const u = data.user;
         const meta = u.user_metadata || {};
+        const isUserAdmin = meta.role === 'admin' || u.email?.toLowerCase().includes('admin');
         const mappedPatient = {
           id: u.id,
+          role: isUserAdmin ? 'admin' : (meta.role || 'patient'),
           name: meta.full_name || meta.name || u.email.split('@')[0],
           email: u.email,
           phone: meta.phone || '+1 (555) 000-0000',
@@ -91,11 +102,11 @@ export function AuthProvider({ children }) {
           address: meta.address || 'Springfield, OR',
           avatar: meta.avatar || `https://images.unsplash.com/photo-${meta.gender === 'Female' ? '1494790108377-be9c29b29330' : '1535713875002-d1d0cf377fde'}?w=300&auto=format&fit=crop&q=80`,
           emergencyContact: meta.emergency_contact || 'Family contact',
-          bio: meta.bio || 'MediCare verified patient member.'
+          bio: meta.bio || 'MediCare verified member.'
         };
         setPatient(mappedPatient);
         setLoading(false);
-        return { success: true, patient: mappedPatient };
+        return { success: true, patient: mappedPatient, role: mappedPatient.role };
       }
     } catch (err) {
       setLoading(false);
@@ -109,11 +120,12 @@ export function AuthProvider({ children }) {
     const normalizedEmail = userData.email.trim().toLowerCase();
 
     const metadata = {
+      role: 'patient',
       full_name: userData.fullName || userData.name,
       phone: userData.phone || '+1 (555) 000-0000',
-      date_of_birth: userData.dateOfBirth || '1995-01-01',
+      dateOfBirth: userData.dateOfBirth || '1995-01-01',
       gender: userData.gender || 'Male',
-      blood_group: userData.bloodGroup || 'A+',
+      bloodGroup: userData.bloodGroup || 'A+',
       address: userData.address || 'Springfield, OR',
       avatar: `https://images.unsplash.com/photo-${userData.gender === 'Female' ? '1494790108377-be9c29b29330' : '1535713875002-d1d0cf377fde'}?w=300&auto=format&fit=crop&q=80`,
       emergency_contact: userData.emergencyContact || 'Family contact',
@@ -144,12 +156,13 @@ export function AuthProvider({ children }) {
 
       const newPatient = {
         id: registeredUser.id,
+        role: 'patient',
         name: metadata.full_name,
         email: normalizedEmail,
         phone: metadata.phone,
-        dateOfBirth: metadata.date_of_birth,
+        dateOfBirth: metadata.dateOfBirth,
         gender: metadata.gender,
-        bloodGroup: metadata.blood_group,
+        bloodGroup: metadata.bloodGroup,
         address: metadata.address,
         avatar: metadata.avatar,
         emergencyContact: metadata.emergency_contact,
@@ -158,7 +171,7 @@ export function AuthProvider({ children }) {
 
       setPatient(newPatient);
       setLoading(false);
-      return { success: true, patient: newPatient };
+      return { success: true, patient: newPatient, role: 'patient' };
     } catch (err) {
       setLoading(false);
       throw err;
@@ -189,13 +202,16 @@ export function AuthProvider({ children }) {
       value={{
         patient,
         user: patient,
+        role: patient?.role || 'patient',
+        isAdmin: patient?.role === 'admin',
         isAuthenticated: !!patient,
         loading,
         login,
         register,
         logout,
         updateProfile,
-        demoPatient: initialDemoPatient
+        demoPatient: initialDemoPatient,
+        demoAdmin: initialAdminUser
       }}
     >
       {children}

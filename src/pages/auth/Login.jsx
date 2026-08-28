@@ -47,7 +47,11 @@ export function Login() {
     try {
       const res = await login(email, password);
       showToast(`Welcome back, ${res.patient.name}!`, 'success');
-      navigate(from, { replace: true });
+      if (res.role === 'admin' || res.patient?.role === 'admin') {
+        navigate('/admin/dashboard', { replace: true });
+      } else {
+        navigate(from === '/login' ? '/patient/dashboard' : from, { replace: true });
+      }
     } catch (err) {
       setError(err.message || 'Invalid email or password.');
     }
@@ -56,6 +60,12 @@ export function Login() {
   const fillDemoPatient = () => {
     setEmail('patient@hospital.com');
     setPassword('patient123');
+    setError('');
+  };
+
+  const fillDemoAdmin = () => {
+    setEmail('admin@hospital.com');
+    setPassword('admin123');
     setError('');
   };
 
@@ -130,19 +140,35 @@ export function Login() {
             </p>
           </div>
 
-          {/* Quick 1-Click Demo Fill */}
-          <div className="p-3.5 rounded-2xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-900/60 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2 text-xs">
-              <Sparkles className="w-4 h-4 text-amber-500 flex-shrink-0" />
-              <span className="font-bold text-slate-800 dark:text-slate-200">Patient Demo Account</span>
+          {/* Quick 1-Click Demo Accounts */}
+          <div className="grid grid-cols-2 gap-2.5">
+            <div className="p-3 rounded-2xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-900/60 flex flex-col justify-between gap-2">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200">
+                <Sparkles className="w-3.5 h-3.5 text-blue-500" />
+                <span>Patient Demo</span>
+              </div>
+              <button
+                type="button"
+                onClick={fillDemoPatient}
+                className="w-full py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold shadow-sm transition-all"
+              >
+                Fill Patient
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={fillDemoPatient}
-              className="px-3 py-1.5 rounded-xl bg-blue-600 text-white text-xs font-bold shadow-sm hover:bg-blue-700 transition-all"
-            >
-              Fill Credentials
-            </button>
+
+            <div className="p-3 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-900/60 flex flex-col justify-between gap-2">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200">
+                <ShieldCheck className="w-3.5 h-3.5 text-indigo-500" />
+                <span>Admin Demo</span>
+              </div>
+              <button
+                type="button"
+                onClick={fillDemoAdmin}
+                className="w-full py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold shadow-sm transition-all"
+              >
+                Fill Admin
+              </button>
+            </div>
           </div>
 
           {error && (
