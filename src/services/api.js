@@ -4,6 +4,7 @@
 import {
   getStoredDoctors,
   getStoredPatients,
+  getStoredAdmins,
   getStoredAppointments,
   updateStoredDoctor,
   updateStoredPatient,
@@ -12,6 +13,7 @@ import {
   saveStoredDiagnosis,
   getAvailableSlotsForDoctor,
   createStoredAppointment,
+  registerStoredUser,
   getCurrentUser,
   setCurrentUser
 } from './backendStore.js';
@@ -22,12 +24,29 @@ export const api = {
   // Authentication methods
   async login(email, password) {
     await delay(400);
-    const doctors = getStoredDoctors();
-    const doctor = doctors.find(d => d.email.toLowerCase() === email.toLowerCase());
+    const cleanEmail = email ? email.trim().toLowerCase() : '';
 
+    // Check Admin
+    const admins = getStoredAdmins();
+    const admin = admins.find(a => a.email.toLowerCase() === cleanEmail);
+    if (admin || cleanEmail === 'admin@hospital.org') {
+      const user = {
+        id: admin?.userId || 'user-admin-1',
+        name: admin?.fullName || 'System Administrator',
+        email: admin?.email || 'admin@hospital.org',
+        role: 'admin',
+        token: `jwt_admin_token_${Date.now()}`
+      };
+      setCurrentUser(user);
+      return user;
+    }
+
+    // Check Doctor
+    const doctors = getStoredDoctors();
+    const doctor = doctors.find(d => d.email.toLowerCase() === cleanEmail);
     if (doctor) {
       const user = {
-        id: doctor.userId || 'user-doc-1',
+        id: doctor.userId || `user-doc-${doctor.id}`,
         doctorId: doctor.id,
         name: doctor.fullName,
         email: doctor.email,
@@ -38,12 +57,12 @@ export const api = {
       return user;
     }
 
+    // Check Patient
     const patients = getStoredPatients();
-    const patient = patients.find(p => p.email.toLowerCase() === email.toLowerCase());
-
+    const patient = patients.find(p => p.email.toLowerCase() === cleanEmail);
     if (patient) {
       const user = {
-        id: patient.userId || 'user-pat-1',
+        id: patient.userId || `user-pat-${patient.id}`,
         patientId: patient.id,
         name: patient.fullName,
         email: patient.email,
@@ -54,18 +73,42 @@ export const api = {
       return user;
     }
 
-    // Default to first patient if unknown
-    const defaultPatient = patients[0];
-    const user = {
-      id: defaultPatient.userId || 'user-pat-1',
-      patientId: defaultPatient.id,
-      name: defaultPatient.fullName,
-      email: defaultPatient.email,
-      role: 'patient',
-      token: `jwt_token_${defaultPatient.id}_${Date.now()}`
+    throw new Error('Invalid email address or password.');
+  },
+
+  async register(registrationData) {
+    await delay(450);
+    return registerStoredUser(registrationData);
+  },
+
+  // ADMIN API ENDPOINTS
+  async getAdminStats() {
+    await delay(300);
+    const doctors = getStoredDoctors();
+    const patients = getStoredPatients();
+    const appointments = getStoredAppointments();
+    const todayStr = new Date().toISOString().split('T')[0];
+
+    const todayAppointments = appointments.filter(a => a.date === todayStr);
+    const pendingAppointments = appointments.filter(a => a.status === 'Pending');
+    const confirmedAppointments = appointments.filter(a => a.status === 'Confirmed');
+    const completedAppointments = appointments.filter(a => a.status === 'Completed');
+    const cancelledAppointments = appointments.filter(a => a.status === 'Cancelled');
+
+    const departments = [...new Set(doctors.map(d => d.department))];
+
+    return {
+      totalDoctors: doctors.length,
+      totalPatients: patients.length,
+      todayAppointments: todayAppointments.length,
+      pendingAppointments: pendingAppointments.length,
+      confirmedAppointments: confirmedAppointments.length,
+      completedAppointments: completedAppointments.length,
+      cancelledAppointments: cancelledAppointments.length,
+      totalDepartments: departments.length,
+      departmentsList: departments,
+      recentAppointments: appointments.slice(0, 5)
     };
-    setCurrentUser(user);
-    return user;
   },
 
   // DOCTOR API ENDPOINTS

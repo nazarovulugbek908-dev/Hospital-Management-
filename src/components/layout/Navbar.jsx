@@ -1,330 +1,273 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import {
-  Search,
-  Bell,
-  Sun,
-  Moon,
-  User,
-  Settings,
-  LogOut,
-  Menu,
-  CheckSquare,
-  FileText,
-  Calendar,
-  ChevronDown,
-  Globe
-} from 'lucide-react';
+// Responsive Top Navigation Bar for Hospital Management System (Healthcare Theme + i18n)
+
+import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext.jsx';
-import { useTheme } from '../../context/ThemeContext.jsx';
-import { useHospital } from '../../context/HospitalContext.jsx';
 import { useLanguage } from '../../context/LanguageContext.jsx';
-import { Avatar } from '../common/Badge.jsx';
+import { LanguageSelector } from '../common/LanguageSelector.jsx';
+import {
+  Activity,
+  User,
+  LogOut,
+  Bell,
+  Stethoscope,
+  ShieldCheck,
+  ChevronDown,
+  Calendar,
+  Search,
+  CheckCircle2,
+  X,
+  Menu
+} from 'lucide-react';
 
-export function Navbar({ onOpenMobileMenu }) {
-  const { patient, logout } = useAuth();
-  const { isDark, toggleTheme } = useTheme();
-  const { notifications, markNotificationAsRead, markAllNotificationsAsRead } = useHospital();
-  const { lang, setLang, t, languagesList } = useLanguage();
-  const navigate = useNavigate();
+export function Navbar({ activeTab, setActiveTab, onOpenAuthModal, onBookAppointment }) {
+  const { user, doctorProfile, patientProfile, isAdmin, isDoctor, isPatient, isOnDuty, toggleDutyStatus, logout } = useAuth();
+  const { t } = useLanguage();
 
-  const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [isLangOpen, setIsLangOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
 
-  const notifRef = useRef(null);
-  const profileRef = useRef(null);
-  const langRef = useRef(null);
+  // Mock Notifications
+  const [notifications, setNotifications] = useState([
+    {
+      id: 1,
+      title: 'New Consultation Request',
+      time: '10m ago',
+      read: false,
+      desc: 'Eleanor Vance requested an appointment for tomorrow at 10:00 AM.'
+    },
+    {
+      id: 2,
+      title: 'Lab Report Ready',
+      time: '1h ago',
+      read: false,
+      desc: 'Blood work results for Patient #P-1002 are ready for review.'
+    },
+    {
+      id: 3,
+      title: 'Shift Reminder',
+      time: '3h ago',
+      read: true,
+      desc: 'Your afternoon shift starts at 2:00 PM in Wing B.'
+    }
+  ]);
 
   const unreadCount = notifications.filter(n => !n.read).length;
-  const currentLangObj = languagesList.find(l => l.code === lang) || languagesList[0];
 
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (notifRef.current && !notifRef.current.contains(event.target)) {
-        setIsNotifOpen(false);
-      }
-      if (profileRef.current && !profileRef.current.contains(event.target)) {
-        setIsProfileOpen(false);
-      }
-      if (langRef.current && !langRef.current.contains(event.target)) {
-        setIsLangOpen(false);
-      }
+  const markAllRead = () => {
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  };
+
+  const getRoleBadge = () => {
+    if (isAdmin) {
+      return (
+        <span className="px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-400 text-[10px] font-extrabold border border-rose-500/20 uppercase tracking-wider">
+          Admin
+        </span>
+      );
     }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (!searchQuery.trim()) return;
-    navigate(`/patient/doctors?search=${encodeURIComponent(searchQuery)}`);
+    if (isDoctor) {
+      return (
+        <span className="px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-400 text-[10px] font-extrabold border border-sky-500/20 uppercase tracking-wider">
+          Doctor
+        </span>
+      );
+    }
+    return (
+      <span className="px-2 py-0.5 rounded-full bg-teal-500/10 text-teal-400 text-[10px] font-extrabold border border-teal-500/20 uppercase tracking-wider">
+        Patient
+      </span>
+    );
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
+  const displayName = isAdmin
+    ? (user?.name || 'Hospital Admin')
+    : isDoctor
+    ? (doctorProfile?.fullName || user?.name || 'Dr. Sarah Jenkins')
+    : (patientProfile?.fullName || user?.name || 'Eleanor Vance');
+
+  const displaySubtitle = isAdmin
+    ? 'System Administrator'
+    : isDoctor
+    ? (doctorProfile?.specialization || 'Cardiologist')
+    : (patientProfile?.email || user?.email || 'Patient Member');
+
+  const avatarUrl = isDoctor
+    ? (doctorProfile?.avatar || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=300&auto=format&fit=crop&q=80')
+    : isPatient
+    ? (patientProfile?.avatar || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300&auto=format&fit=crop&q=80')
+    : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80';
 
   return (
-    <header className="sticky top-0 z-30 w-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-lg border-b border-slate-200/80 dark:border-slate-800 transition-colors duration-200">
-      <div className="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8 gap-4">
-        {/* Left: Mobile Trigger & Brand Logo */}
-        <div className="flex items-center gap-3">
-          <button
-            onClick={onOpenMobileMenu}
-            className="lg:hidden p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-            aria-label="Open navigation menu"
-          >
-            <Menu className="w-5 h-5" />
-          </button>
-
-          <Link to="/patient/dashboard" className="flex items-center gap-2.5 group">
-            <span className="text-2xl select-none group-hover:scale-105 transition-transform">🏥</span>
-            <div>
-              <span className="text-xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-                Medi<span className="text-blue-600 dark:text-blue-400">Care</span>
-              </span>
-              <span className="hidden sm:block text-[10px] font-bold text-slate-400 -mt-1 tracking-wider uppercase">
-                {t('portalTitle')}
-              </span>
+    <header className="sticky top-0 z-40 bg-slate-950/90 backdrop-blur-md border-b border-slate-800/80 px-4 md:px-8 py-3 transition-all">
+      <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+        {/* Brand Logo & Title */}
+        <div className="flex items-center gap-3 cursor-pointer" onClick={() => setActiveTab('dashboard')}>
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-sky-500 to-teal-400 p-0.5 shadow-lg shadow-sky-500/20">
+            <div className="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center">
+              <Activity className="w-5 h-5 text-sky-400 animate-pulse" />
             </div>
-          </Link>
-        </div>
-
-        {/* Center: Search Doctors */}
-        <div className="hidden md:flex flex-1 max-w-md mx-4">
-          <form onSubmit={handleSearch} className="w-full relative">
-            <Search className="absolute inset-y-0 left-3.5 my-auto w-4 h-4 text-slate-400" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={lang === 'uz' ? "Shifokorlarni ismi, bo'limi bo'yicha qidiring..." : lang === 'ru' ? "Поиск врачей по имени, отделению..." : "Search doctors by name, specialty, department..."}
-              className="w-full pl-10 pr-4 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all duration-200"
-            />
-          </form>
-        </div>
-
-        {/* Right: Language Switcher, Theme Toggle, Notifications, User Menu */}
-        <div className="flex items-center gap-2 sm:gap-3">
-          {/* Language Switcher Dropdown */}
-          <div className="relative" ref={langRef}>
-            <button
-              onClick={() => setIsLangOpen(!isLangOpen)}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-700/60 text-xs font-bold text-slate-700 dark:text-slate-200 transition-colors shadow-sm"
-              title="Change Language"
-            >
-              <span>{currentLangObj.flag}</span>
-              <span className="hidden sm:inline uppercase">{currentLangObj.code}</span>
-              <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
-            </button>
-
-            {isLangOpen && (
-              <div className="absolute right-0 mt-2 w-36 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-1.5 shadow-xl z-50 animate-slideDown">
-                {languagesList.map((item) => (
-                  <button
-                    key={item.code}
-                    onClick={() => {
-                      setLang(item.code);
-                      setIsLangOpen(false);
-                    }}
-                    className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
-                      lang === item.code
-                        ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 font-bold'
-                        : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <span>{item.flag}</span>
-                      <span>{item.name}</span>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-lg font-black tracking-tight text-white flex items-center gap-1.5">
+                <span>{t('portalTitle')}</span>
+              </h1>
+              {getRoleBadge()}
+            </div>
+            <p className="text-[11px] font-medium text-slate-400 hidden sm:block">
+              MedPulse Care System • International Standard
+            </p>
+          </div>
+        </div>
 
-          {/* Dark / Light Toggle */}
-          <button
-            onClick={toggleTheme}
-            className="p-2.5 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-            aria-label="Toggle theme"
-            title={isDark ? "Switch to light mode" : "Switch to dark mode"}
-          >
-            {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-600" />}
-          </button>
+        {/* Action Controls & Profile Menu */}
+        <div className="flex items-center gap-3">
+          {/* Language Selector */}
+          <LanguageSelector />
 
-          {/* Notifications Dropdown */}
-          <div className="relative" ref={notifRef}>
+          {/* Quick Book Appointment Button for Patients */}
+          {isPatient && (
             <button
-              onClick={() => setIsNotifOpen(!isNotifOpen)}
-              className="relative p-2.5 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-              aria-label="Notifications"
+              onClick={() => onBookAppointment && onBookAppointment()}
+              className="hidden sm:flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-sky-500 to-teal-500 hover:from-sky-400 hover:to-teal-400 text-slate-950 font-bold text-xs shadow-md transition-all"
             >
-              <Bell className="w-4 h-4" />
+              <Calendar className="w-3.5 h-3.5 stroke-[2.5]" />
+              <span>{t('bookAppointment')}</span>
+            </button>
+          )}
+
+          {/* Doctor On-Duty Toggle */}
+          {isDoctor && (
+            <button
+              onClick={toggleDutyStatus}
+              className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all ${
+                isOnDuty
+                  ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                  : 'bg-slate-900 border-slate-800 text-slate-500'
+              }`}
+            >
+              <span className={`w-2 h-2 rounded-full ${isOnDuty ? 'bg-emerald-400 animate-pulse' : 'bg-slate-600'}`} />
+              <span>{isOnDuty ? t('onDuty') : t('offDuty')}</span>
+            </button>
+          )}
+
+          {/* Notifications Popover */}
+          <div className="relative">
+            <button
+              onClick={() => setIsNotifOpen(prev => !prev)}
+              className="relative p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 transition-colors"
+              title="Notifications"
+            >
+              <Bell className="w-4.5 h-4.5" />
               {unreadCount > 0 && (
-                <span className="absolute top-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[9px] font-bold text-white ring-2 ring-white dark:ring-slate-900">
+                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-500 text-white text-[10px] font-extrabold flex items-center justify-center shadow-md">
                   {unreadCount}
                 </span>
               )}
             </button>
 
             {isNotifOpen && (
-              <div className="absolute right-0 mt-2 w-80 sm:w-96 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800/90 p-4 shadow-xl z-50 animate-slideDown">
-                <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-100 dark:border-slate-800">
+              <div className="absolute right-0 mt-3 w-80 sm:w-96 rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl p-4 z-50 animate-fadeIn space-y-3">
+                <div className="flex items-center justify-between pb-2 border-b border-slate-800">
                   <div className="flex items-center gap-2">
-                    <h4 className="text-sm font-bold text-slate-900 dark:text-white">{t('notifications')}</h4>
-                    {unreadCount > 0 && (
-                      <span className="text-[10px] font-bold bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded-full border border-blue-200 dark:border-blue-900">
-                        {unreadCount} new
-                      </span>
-                    )}
+                    <Bell className="w-4 h-4 text-sky-400" />
+                    <h3 className="text-xs font-bold text-white">{t('notifications')}</h3>
+                    <span className="px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 text-[10px] font-bold">
+                      {unreadCount} {t('unread')}
+                    </span>
                   </div>
-                  {unreadCount > 0 && (
-                    <button
-                      onClick={markAllNotificationsAsRead}
-                      className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:underline"
-                    >
-                      {lang === 'uz' ? "Barchasini o'qilgan qilish" : lang === 'ru' ? "Прочитать все" : "Mark all as read"}
-                    </button>
-                  )}
-                </div>
-
-                <div className="max-h-72 overflow-y-auto space-y-2 pr-1">
-                  {notifications.length === 0 ? (
-                    <div className="py-6 text-center text-xs text-slate-400">
-                      {lang === 'uz' ? "Hozircha bildirishnomalar yo'q" : lang === 'ru' ? "Нет уведомлений" : "No notifications yet"}
-                    </div>
-                  ) : (
-                    notifications.slice(0, 4).map(notif => (
-                      <div
-                        key={notif.id}
-                        onClick={() => markNotificationAsRead(notif.id)}
-                        className={`p-2.5 rounded-xl transition-all cursor-pointer flex gap-3 ${
-                          notif.read
-                            ? 'bg-slate-50 dark:bg-slate-800/40 opacity-75'
-                            : 'bg-blue-50/70 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900/50'
-                        }`}
-                      >
-                        <div className="w-2 h-2 rounded-full bg-blue-600 mt-1.5 flex-shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{notif.title}</p>
-                          <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2 mt-0.5">{notif.message}</p>
-                          <span className="text-[10px] text-slate-400 mt-1 block">{notif.timestamp}</span>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-
-                <div className="pt-3 mt-3 border-t border-slate-100 dark:border-slate-800 text-center">
-                  <Link
-                    to="/notifications"
-                    onClick={() => setIsNotifOpen(false)}
-                    className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline"
+                  <button
+                    onClick={markAllRead}
+                    className="text-[11px] text-sky-400 hover:text-sky-300 font-semibold"
                   >
-                    {t('viewAll')}
-                  </Link>
+                    {t('markAllRead')}
+                  </button>
+                </div>
+
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {notifications.map(notif => (
+                    <div
+                      key={notif.id}
+                      className={`p-3 rounded-xl border text-xs space-y-1 transition-colors ${
+                        notif.read
+                          ? 'bg-slate-950/40 border-slate-800/60 text-slate-400'
+                          : 'bg-slate-950 border-sky-500/30 text-slate-200'
+                      }`}
+                    >
+                      <div className="flex justify-between font-semibold text-white">
+                        <span>{notif.title}</span>
+                        <span className="text-[10px] text-slate-500 font-mono">{notif.time}</span>
+                      </div>
+                      <p className="text-[11px] leading-relaxed text-slate-300">{notif.desc}</p>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
           </div>
 
           {/* User Profile Dropdown */}
-          {patient ? (
-            <div className="relative" ref={profileRef}>
-              <button
-                onClick={() => setIsProfileOpen(!isProfileOpen)}
-                className="flex items-center gap-2.5 p-1 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                aria-label="User profile menu"
-              >
-                <Avatar
-                  src={patient.avatar}
-                  name={patient.name}
-                  size="sm"
-                  status="online"
-                />
-                <div className="hidden lg:block text-left pr-1">
-                  <p className="text-xs font-bold text-slate-900 dark:text-white truncate max-w-[120px]">
-                    {patient.name}
-                  </p>
-                  <p className="text-[10px] font-medium text-slate-400">
-                    {t('portalTitle')}
-                  </p>
-                </div>
-                <ChevronDown className="hidden lg:block w-3.5 h-3.5 text-slate-400" />
-              </button>
-
-              {isProfileOpen && (
-                <div className="absolute right-0 mt-2 w-56 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800/90 p-2 shadow-xl z-50 animate-slideDown">
-                  <div className="p-3 border-b border-slate-100 dark:border-slate-800">
-                    <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{patient.name}</p>
-                    <p className="text-[11px] text-slate-400 truncate">{patient.email}</p>
-                  </div>
-
-                  <div className="py-1 space-y-0.5 text-xs">
-                    <Link
-                      to="/profile"
-                      onClick={() => setIsProfileOpen(false)}
-                      className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors font-medium"
-                    >
-                      <User className="w-4 h-4 text-slate-400" />
-                      <span>{t('myProfile')}</span>
-                    </Link>
-
-                    <Link
-                      to="/settings"
-                      onClick={() => setIsProfileOpen(false)}
-                      className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors font-medium"
-                    >
-                      <Settings className="w-4 h-4 text-slate-400" />
-                      <span>{t('accountSettings')}</span>
-                    </Link>
-
-                    <Link
-                      to="/patient/appointments"
-                      onClick={() => setIsProfileOpen(false)}
-                      className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors font-medium"
-                    >
-                      <Calendar className="w-4 h-4 text-slate-400" />
-                      <span>{t('myAppointments')}</span>
-                    </Link>
-
-                    <Link
-                      to="/todo"
-                      onClick={() => setIsProfileOpen(false)}
-                      className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors font-medium"
-                    >
-                      <CheckSquare className="w-4 h-4 text-slate-400" />
-                      <span>{t('myTasks')}</span>
-                    </Link>
-                  </div>
-
-                  <div className="pt-1 border-t border-slate-100 dark:border-slate-800">
-                    <button
-                      onClick={() => {
-                        setIsProfileOpen(false);
-                        handleLogout();
-                      }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
-                    >
-                      <LogOut className="w-4 h-4" />
-                      <span>{t('signOut')}</span>
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          ) : (
-            <Link
-              to="/login"
-              className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-600/25 transition-all"
+          <div className="relative">
+            <button
+              onClick={() => setIsProfileOpen(prev => !prev)}
+              className="flex items-center gap-2.5 p-1.5 pl-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 transition-all"
             >
-              Sign In
-            </Link>
-          )}
+              <img
+                src={avatarUrl}
+                alt={displayName}
+                className="w-8 h-8 rounded-lg object-cover border border-sky-500/40"
+              />
+              <div className="text-left hidden md:block">
+                <div className="text-xs font-bold text-white leading-tight">{displayName}</div>
+                <div className="text-[10px] text-slate-400 leading-tight">{displaySubtitle}</div>
+              </div>
+              <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+            </button>
+
+            {isProfileOpen && (
+              <div className="absolute right-0 mt-3 w-56 rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl p-2 z-50 space-y-1 animate-fadeIn">
+                <div className="px-3 py-2 border-b border-slate-800 mb-1">
+                  <p className="text-xs font-bold text-white truncate">{displayName}</p>
+                  <p className="text-[10px] text-slate-400 truncate">{displaySubtitle}</p>
+                </div>
+
+                <button
+                  onClick={() => {
+                    setActiveTab('profile');
+                    setIsProfileOpen(false);
+                  }}
+                  className="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:bg-slate-800 hover:text-white flex items-center gap-2 transition-colors"
+                >
+                  <User className="w-4 h-4 text-sky-400" />
+                  <span>{t('myProfile')}</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setIsProfileOpen(false);
+                    onOpenAuthModal && onOpenAuthModal();
+                  }}
+                  className="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:bg-slate-800 hover:text-white flex items-center gap-2 transition-colors"
+                >
+                  <ShieldCheck className="w-4 h-4 text-teal-400" />
+                  <span>{t('switchRole')}</span>
+                </button>
+
+                <div className="border-t border-slate-800 my-1 pt-1">
+                  <button
+                    onClick={() => {
+                      setIsProfileOpen(false);
+                      logout();
+                    }}
+                    className="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold text-rose-400 hover:bg-rose-500/10 flex items-center gap-2 transition-colors"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span>{t('logout')}</span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </header>
