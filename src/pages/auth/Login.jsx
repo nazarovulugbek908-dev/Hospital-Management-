@@ -16,6 +16,7 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { Button } from '../../components/common/Button.jsx';
 import { Input } from '../../components/common/Input.jsx';
+import { Logo } from '../../components/common/Logo.jsx';
 
 export function Login() {
   const { login, loading } = useAuth();
@@ -77,11 +78,8 @@ export function Login() {
         <div className="absolute top-1/4 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative z-10">
-          <Link to="/" className="inline-flex items-center gap-2.5">
-            <span className="text-3xl">🏥</span>
-            <span className="text-2xl font-black tracking-tight text-white drop-shadow-sm">
-              MediCare
-            </span>
+          <Link to="/" className="inline-flex items-center">
+            <Logo size="lg" whiteText={true} />
           </Link>
         </div>
 
@@ -125,9 +123,8 @@ export function Login() {
         <div className="w-full max-w-md space-y-6 animate-fadeIn">
           {/* Brand header on mobile */}
           <div className="lg:hidden text-center pb-2">
-            <Link to="/" className="inline-flex items-center gap-2">
-              <span className="text-3xl">🏥</span>
-              <span className="text-2xl font-black text-slate-900 dark:text-white">MediCare</span>
+            <Link to="/" className="inline-flex items-center justify-center">
+              <Logo size="lg" />
             </Link>
           </div>
 

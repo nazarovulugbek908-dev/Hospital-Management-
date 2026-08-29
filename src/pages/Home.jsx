@@ -23,6 +23,7 @@ import { useTheme } from '../context/ThemeContext.jsx';
 import { useHospital } from '../context/HospitalContext.jsx';
 import { DoctorCard } from '../components/doctors/DoctorCard.jsx';
 import { Badge } from '../components/common/Badge.jsx';
+import { Logo, LogoIcon } from '../components/common/Logo.jsx';
 
 export function Home() {
   const { isAuthenticated, patient } = useAuth();
@@ -102,11 +103,8 @@ export function Home() {
       {/* Navbar */}
       <header className="sticky top-0 z-40 w-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-lg border-b border-slate-200/80 dark:border-slate-800">
         <div className="max-w-7xl mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
-          <Link to="/" className="flex items-center gap-2.5 group">
-            <span className="text-2xl group-hover:scale-110 transition-transform select-none">🏥</span>
-            <span className="text-xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-              Medi<span className="text-blue-600 dark:text-blue-400">Care</span>
-            </span>
+          <Link to="/">
+            <Logo size="md" />
           </Link>
 
           <nav className="hidden md:flex items-center gap-8 text-xs font-bold text-slate-600 dark:text-slate-300">
@@ -394,7 +392,7 @@ export function Home() {
       <footer className="py-12 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs text-slate-500 dark:text-slate-400">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <span className="text-lg">🏥</span>
+            <LogoIcon size="sm" />
             <span className="font-bold text-slate-800 dark:text-slate-200">MediCare Patient Portal</span>
             <span>• Educational Portfolio Demo</span>
           </div>

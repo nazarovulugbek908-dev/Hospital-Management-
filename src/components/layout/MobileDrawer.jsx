@@ -21,6 +21,7 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import { useTheme } from '../../context/ThemeContext.jsx';
 import { useHospital } from '../../context/HospitalContext.jsx';
 import { Avatar } from '../common/Badge.jsx';
+import { Logo } from '../common/Logo.jsx';
 
 export function MobileDrawer({ isOpen, onClose }) {
   const { patient, logout } = useAuth();
@@ -75,11 +76,8 @@ export function MobileDrawer({ isOpen, onClose }) {
       <div className="fixed inset-y-0 left-0 w-4/5 max-w-xs bg-white dark:bg-slate-900 shadow-2xl flex flex-col z-10 animate-fadeIn">
         {/* Header */}
         <div className="p-4 flex items-center justify-between border-b border-slate-100 dark:border-slate-800">
-          <Link to="/" onClick={onClose} className="flex items-center gap-2">
-            <span className="text-2xl">🏥</span>
-            <span className="font-extrabold text-base tracking-tight text-slate-900 dark:text-white">
-              Medi<span className="text-blue-600 dark:text-blue-400">Care</span>
-            </span>
+          <Link to="/" onClick={onClose}>
+            <Logo size="sm" />
           </Link>
 
           <button

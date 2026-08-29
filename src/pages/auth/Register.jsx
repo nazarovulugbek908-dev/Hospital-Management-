@@ -16,6 +16,7 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { Button } from '../../components/common/Button.jsx';
 import { Input, Select } from '../../components/common/Input.jsx';
+import { Logo } from '../../components/common/Logo.jsx';
 
 export function Register() {
   const { register, loading } = useAuth();
@@ -78,11 +79,8 @@ export function Register() {
 
       <div className="w-full max-w-xl space-y-6 relative z-10 animate-fadeIn">
         <div className="text-center space-y-2">
-          <Link to="/" className="inline-flex items-center gap-2 group">
-            <span className="text-3xl">🏥</span>
-            <span className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
-              Medi<span className="text-blue-600 dark:text-blue-400">Care</span>
-            </span>
+          <Link to="/" className="inline-flex items-center justify-center">
+            <Logo size="lg" />
           </Link>
           <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
             Patient Registration

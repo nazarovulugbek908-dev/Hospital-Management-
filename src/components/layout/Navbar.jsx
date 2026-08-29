@@ -20,6 +20,7 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import { useTheme } from '../../context/ThemeContext.jsx';
 import { useHospital } from '../../context/HospitalContext.jsx';
 import { useLanguage } from '../../context/LanguageContext.jsx';
+import { Logo } from '../common/Logo.jsx';
 import { Avatar } from '../common/Badge.jsx';
 
 export function Navbar({ onOpenMobileMenu }) {
@@ -81,16 +82,8 @@ export function Navbar({ onOpenMobileMenu }) {
             <Menu className="w-5 h-5" />
           </button>
 
-          <Link to="/patient/dashboard" className="flex items-center gap-2.5 group">
-            <span className="text-2xl select-none group-hover:scale-105 transition-transform">🏥</span>
-            <div>
-              <span className="text-xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-                Medi<span className="text-blue-600 dark:text-blue-400">Care</span>
-              </span>
-              <span className="hidden sm:block text-[10px] font-bold text-slate-400 -mt-1 tracking-wider uppercase">
-                {t('portalTitle')}
-              </span>
-            </div>
+          <Link to="/patient/dashboard">
+            <Logo size="md" subtitle={t('portalTitle')} />
           </Link>
         </div>
 
