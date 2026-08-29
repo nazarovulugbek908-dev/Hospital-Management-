@@ -150,17 +150,18 @@ export function AdminSidebar({ collapsed, onToggleCollapse }) {
           <div className="flex items-center justify-between gap-2 p-2 rounded-2xl bg-white dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60 shadow-sm">
             <div className="flex items-center gap-2.5 min-w-0">
               <Avatar
-                src={user?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80'}
-                alt={user?.name || 'Admin'}
+                src={user?.avatar}
+                name={user?.name || 'System Administrator'}
                 size="sm"
+                status="online"
               />
               <div className="min-w-0">
                 <p className="text-xs font-bold text-slate-900 dark:text-white truncate">
-                  {user?.name || 'Administrator'}
+                  {user?.name || 'System Administrator'}
                 </p>
-                <span className="inline-block px-1.5 py-0.2 rounded-md bg-blue-100 dark:bg-blue-900/40 text-[9px] font-black text-blue-700 dark:text-blue-300 uppercase">
-                  ADMIN
-                </span>
+                <p className="text-[10px] font-medium text-slate-400">
+                  Administrator
+                </p>
               </div>
             </div>
             <button

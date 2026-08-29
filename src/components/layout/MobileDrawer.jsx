@@ -94,7 +94,7 @@ export function MobileDrawer({ isOpen, onClose }) {
             <Avatar src={patient.avatar} name={patient.name} size="sm" />
             <div className="flex-1 min-w-0">
               <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{patient.name}</p>
-              <p className="text-[10px] text-slate-400">Patient Account</p>
+              <p className="text-[10px] text-slate-400">{patient.role === 'admin' ? 'Administrator' : 'Patient Account'}</p>
             </div>
             <button
               onClick={toggleTheme}
