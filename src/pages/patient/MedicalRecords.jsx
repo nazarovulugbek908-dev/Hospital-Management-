@@ -36,10 +36,10 @@ export function MedicalRecords() {
   const handleSaveRecord = async (formData) => {
     if (recordToEdit) {
       await updateMedicalRecord(recordToEdit.id, formData);
-      showToast(lang === 'uz' ? 'Tibbiy xulosa yangilandi.' : 'Medical record updated.', 'success');
+      showToast(lang === 'uz' ? 'Tibbiy xulosa yangilandi.' : lang === 'ru' ? 'Медицинская запись обновлена.' : 'Medical record updated.', 'success');
     } else {
       await addMedicalRecord(formData);
-      showToast(lang === 'uz' ? 'Yangi tibbiy yozuv qo‘shildi.' : 'Medical record added successfully.', 'success');
+      showToast(lang === 'uz' ? 'Yangi tibbiy yozuv qo‘shildi.' : lang === 'ru' ? 'Новая запись успешно добавлена.' : 'Medical record added successfully.', 'success');
     }
   };
 
@@ -47,7 +47,7 @@ export function MedicalRecords() {
     if (!deleteModalId) return;
     try {
       await deleteMedicalRecord(deleteModalId);
-      showToast(lang === 'uz' ? 'Tibbiy yozuv o‘chirildi.' : 'Medical record deleted.', 'info');
+      showToast(lang === 'uz' ? 'Tibbiy yozuv o‘chirildi.' : lang === 'ru' ? 'Запись удалена.' : 'Medical record deleted.', 'info');
     } catch (e) {
       showToast('Failed to delete medical record.', 'error');
     } finally {
@@ -77,7 +77,7 @@ export function MedicalRecords() {
             setIsModalOpen(true);
           }}
         >
-          {lang === 'uz' ? 'Yangi yozuv qo‘shish' : 'Add Medical Record'}
+          {t('addMedicalRecord')}
         </Button>
       </div>
 
@@ -155,16 +155,16 @@ export function MedicalRecords() {
             {t('consultationHistory')} ({medicalRecords.length})
           </h3>
           <span className="text-xs text-slate-500 dark:text-slate-400">
-            {lang === 'uz' ? 'Klinik xulosalar va retseptlar' : 'Documented clinical consultation history'}
+            {lang === 'uz' ? 'Klinik xulosalar va retseptlar' : lang === 'ru' ? 'Клинические заключения и назначения' : 'Documented clinical consultation history'}
           </span>
         </div>
 
         {medicalRecords.length === 0 ? (
           <EmptyState
             icon={FileText}
-            title={lang === 'uz' ? 'Tibbiy yozuvlar topilmadi' : 'No medical history yet'}
-            description={lang === 'uz' ? 'Hozircha sizning profilingizda qayd etilgan tibbiy xulosalar mavjud emas. Yuqoridagi tugma orqali yangi yozuv qo‘shishingiz mumkin.' : 'There are no documented clinical consultation notes for your profile yet. Click "Add Medical Record" above to create one.'}
-            actionLabel={lang === 'uz' ? 'Yangi yozuv qo‘shish' : 'Add Medical Record'}
+            title={t('noRecordsFound')}
+            description={t('noRecordsDesc')}
+            actionLabel={t('addMedicalRecord')}
             onAction={() => {
               setRecordToEdit(null);
               setIsModalOpen(true);
@@ -203,14 +203,14 @@ export function MedicalRecords() {
                           setIsModalOpen(true);
                         }}
                         className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                        title="Edit Record"
+                        title={t('editMedicalRecord')}
                       >
                         <Edit2 className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => setDeleteModalId(rec.id)}
                         className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                        title="Delete Record"
+                        title={t('delete')}
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -272,9 +272,9 @@ export function MedicalRecords() {
         isOpen={!!deleteModalId}
         onClose={() => setDeleteModalId(null)}
         onConfirm={handleConfirmDelete}
-        title={lang === 'uz' ? 'Tibbiy yozuvni o‘chirish' : 'Delete Medical Record'}
-        message={lang === 'uz' ? 'Ushbu tibbiy xulosani o‘chirib tashlamoqchimisiz? Ushbu amalni qaytarib bo‘lmaydi.' : 'Are you sure you want to delete this medical record? This action cannot be undone.'}
-        confirmText={lang === 'uz' ? 'O‘chirish' : 'Delete'}
+        title={t('delete')}
+        message={t('deleteRecordConfirm')}
+        confirmText={t('delete')}
         cancelText={t('cancel')}
         variant="danger"
       />

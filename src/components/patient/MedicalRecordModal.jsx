@@ -54,11 +54,11 @@ export function MedicalRecordModal({ isOpen, onClose, onSave, recordToEdit = nul
     setError('');
 
     if (!formData.diagnosis.trim()) {
-      setError(lang === 'uz' ? 'Tashxis / Xulosa nomini kiriting.' : 'Clinical diagnosis is required.');
+      setError(lang === 'uz' ? 'Tashxis / Xulosa nomini kiriting.' : lang === 'ru' ? 'Введите диагноз / заключение.' : 'Clinical diagnosis is required.');
       return;
     }
     if (!formData.doctor.trim()) {
-      setError(lang === 'uz' ? 'Shifokor ismini kiriting.' : 'Doctor name is required.');
+      setError(lang === 'uz' ? 'Shifokor ismini kiriting.' : lang === 'ru' ? 'Укажите имя врача.' : 'Doctor name is required.');
       return;
     }
 
@@ -84,13 +84,13 @@ export function MedicalRecordModal({ isOpen, onClose, onSave, recordToEdit = nul
             </div>
             <div>
               <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                {recordToEdit
-                  ? (lang === 'uz' ? 'Tibbiy xulosani tahrirlash' : 'Edit Medical Record')
-                  : (lang === 'uz' ? 'Yangi tibbiy yozuv qo‘shish' : 'Add Medical Record')}
+                {recordToEdit ? t('editMedicalRecord') : t('addMedicalRecord')}
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">
                 {lang === 'uz'
                   ? 'Klinik tashxis va shifokor tavsiyalarini qayd qiling'
+                  : lang === 'ru'
+                  ? 'Зафиксируйте диагноз, лечащего врача и рекомендации'
                   : 'Document clinical diagnosis, attending doctor, and recommendations'}
               </p>
             </div>
@@ -114,7 +114,7 @@ export function MedicalRecordModal({ isOpen, onClose, onSave, recordToEdit = nul
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
-              label={lang === 'uz' ? 'Sana' : 'Record Date'}
+              label={t('recordDate')}
               type="date"
               value={formData.date}
               onChange={(e) => setFormData({ ...formData, date: e.target.value })}
@@ -122,7 +122,7 @@ export function MedicalRecordModal({ isOpen, onClose, onSave, recordToEdit = nul
             />
 
             <Select
-              label={lang === 'uz' ? 'Bo‘lim' : 'Department'}
+              label={t('department')}
               value={formData.department}
               onChange={(e) => setFormData({ ...formData, department: e.target.value })}
               options={departmentsList.map(d => ({ value: d, label: d }))}
@@ -131,46 +131,46 @@ export function MedicalRecordModal({ isOpen, onClose, onSave, recordToEdit = nul
 
           <div className="space-y-1">
             <Input
-              label={lang === 'uz' ? 'Shifokor ismi' : 'Attending Doctor'}
+              label={t('attendingDoctor')}
               value={formData.doctor}
               onChange={(e) => setFormData({ ...formData, doctor: e.target.value })}
-              placeholder="e.g. Dr. John Smith"
+              placeholder="Dr. John Smith"
               required
             />
           </div>
 
           <div className="space-y-1">
             <Input
-              label={lang === 'uz' ? 'Klinik tashxis / Xulosa' : 'Clinical Diagnosis / Title'}
+              label={t('diagnosisSummary')}
               value={formData.diagnosis}
               onChange={(e) => setFormData({ ...formData, diagnosis: e.target.value })}
-              placeholder={lang === 'uz' ? 'Masalan: Kardio profilaktik ko‘rik' : 'e.g. Annual Cardio Preventive Checkup'}
+              placeholder={lang === 'uz' ? 'Masalan: Kardio profilaktik ko‘rik' : lang === 'ru' ? 'Например: Профилактический осмотр' : 'e.g. Annual Cardio Preventive Checkup'}
               required
             />
           </div>
 
           <div className="space-y-1.5">
             <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-              {lang === 'uz' ? 'Shifokor tavsiyalari va muolajalar' : 'Doctor Recommendations & Care Plan'}
+              {t('treatmentRecommendations')}
             </label>
             <textarea
               rows={3}
               value={formData.recommendations}
               onChange={(e) => setFormData({ ...formData, recommendations: e.target.value })}
-              placeholder={lang === 'uz' ? 'Dori-darmonlar, parhez yoki jismoniy mashqlar tavsiyalari...' : 'Medications, diet adjustments, or daily routine recommendations...'}
+              placeholder={lang === 'uz' ? 'Dori-darmonlar, parhez yoki jismoniy mashqlar tavsiyalari...' : lang === 'ru' ? 'Назначенные медикаменты, диета, лечебные процедуры...' : 'Medications, diet adjustments, or daily routine recommendations...'}
               className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 text-xs sm:text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all duration-200"
             />
           </div>
 
           <div className="space-y-1.5">
             <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-              {lang === 'uz' ? 'Qo‘shimcha klinik eslatmalar' : 'Doctor Clinical Notes'}
+              {t('notesAndInstructions')}
             </label>
             <textarea
               rows={2}
               value={formData.doctorNotes}
               onChange={(e) => setFormData({ ...formData, doctorNotes: e.target.value })}
-              placeholder={lang === 'uz' ? 'Shifokor tomonidan qo‘shimcha qaydlar...' : 'Doctor observations or follow-up note...'}
+              placeholder={lang === 'uz' ? 'Shifokor tomonidan qo‘shimcha qaydlar...' : lang === 'ru' ? 'Дополнительные клинические заметки...' : 'Doctor observations or follow-up note...'}
               className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 text-xs sm:text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all duration-200"
             />
           </div>
@@ -180,7 +180,7 @@ export function MedicalRecordModal({ isOpen, onClose, onSave, recordToEdit = nul
               {t('cancel')}
             </Button>
             <Button type="submit" variant="primary" loading={loading}>
-              {recordToEdit ? t('saveChanges') : (lang === 'uz' ? 'Qo‘shish' : 'Add Record')}
+              {recordToEdit ? t('saveChanges') : (lang === 'uz' ? 'Qo‘shish' : lang === 'ru' ? 'Добавить' : 'Add Record')}
             </Button>
           </div>
         </form>
