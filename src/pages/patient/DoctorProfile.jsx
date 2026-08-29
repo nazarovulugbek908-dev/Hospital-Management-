@@ -13,7 +13,8 @@ import {
   CheckCircle2,
   Phone,
   Mail,
-  MapPin
+  MapPin,
+  Sparkles
 } from 'lucide-react';
 import { useHospital } from '../../context/HospitalContext.jsx';
 import { useLanguage } from '../../context/LanguageContext.jsx';
