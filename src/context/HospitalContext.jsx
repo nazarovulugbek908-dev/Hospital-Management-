@@ -622,7 +622,7 @@ export function HospitalProvider({ children }) {
       id: 'pat-' + Date.now(),
       status: patientData.status || 'Active',
       registeredDate: new Date().toISOString().split('T')[0],
-      avatar: patientData.avatar || `https://images.unsplash.com/photo-${patientData.gender === 'Female' ? '1494790108377-be9c29b29330' : '1535713875002-d1d0cf377fde'}?w=300&auto=format&fit=crop&q=80`,
+      avatar: patientData.avatar || '',
       role: 'patient',
       ...patientData
     };
