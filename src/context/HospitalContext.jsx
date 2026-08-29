@@ -34,51 +34,33 @@ export function HospitalProvider({ children }) {
         .order('created_at', { ascending: true });
 
       if (!error && data) {
-        if (data.length === 0) {
-          // If doctors table is empty, seed with initial catalog
-          const seedRows = initialDoctors.map(doc => ({
-            id: doc.id,
-            name: doc.name,
-            department: doc.department || '',
-            specialization: doc.specialization || '',
-            experience: doc.experience || '',
-            rating: doc.rating || 5.0,
-            reviews_count: doc.reviewsCount || 0,
-            availability: doc.availability || 'Available Today',
-            working_hours: doc.workingHours || '09:00 AM - 05:00 PM',
-            fee: doc.fee || '$100',
-            education: doc.education || '',
-            biography: doc.biography || '',
-            avatar: doc.avatar || ''
-          }));
-          await supabase.from('doctors').insert(seedRows);
-          setDoctors(initialDoctors);
-        } else {
-          const mapped = data.map(d => ({
-            id: d.id,
-            name: d.name,
-            department: d.department || 'General Medicine',
-            specialization: d.specialization || 'Attending Specialist',
-            experience: d.experience || '5+ years experience',
-            experienceYears: parseInt(d.experience) || 5,
-            rating: parseFloat(d.rating) || 5.0,
-            reviewsCount: d.reviews_count || 0,
-            availability: d.availability || 'Available Today',
-            availableDays: d.available_days || ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
-            workingHours: d.working_hours || '09:00 AM - 05:00 PM',
-            languages: d.languages || ['English', 'Uzbek'],
-            fee: d.fee || '$100',
-            education: d.education || 'MD, Medical School Graduate',
-            biography: d.biography || 'Specialist healthcare professional at MediCare Hospital.',
-            avatar: d.avatar || 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=300&auto=format&fit=crop&q=80',
-            email: d.email || `${d.name.toLowerCase().replace(/[^a-z]/g, '')}@medicare.org`,
-            phone: d.phone || '+1 (555) 234-5678'
-          }));
-          setDoctors(mapped);
-        }
+        const mapped = data.map(d => ({
+          id: d.id,
+          name: d.name,
+          department: d.department || 'General Medicine',
+          specialization: d.specialization || 'Attending Specialist',
+          experience: d.experience || '5+ years experience',
+          experienceYears: parseInt(d.experience) || 5,
+          rating: parseFloat(d.rating) || 5.0,
+          reviewsCount: d.reviews_count || 0,
+          availability: d.availability || 'Available Today',
+          availableDays: d.available_days || ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+          workingHours: d.working_hours || '09:00 AM - 05:00 PM',
+          languages: d.languages || ['English', 'Uzbek'],
+          fee: d.fee || '$100',
+          education: d.education || '',
+          biography: d.biography || '',
+          avatar: d.avatar || '',
+          email: d.email || `${d.name.toLowerCase().replace(/[^a-z]/g, '')}@medicare.org`,
+          phone: d.phone || '+1 (555) 234-5678'
+        }));
+        setDoctors(mapped);
+      } else {
+        setDoctors([]);
       }
     } catch (e) {
       console.error('Error fetching doctors from Supabase:', e);
+      setDoctors([]);
     }
   }, []);
 
@@ -88,52 +70,34 @@ export function HospitalProvider({ children }) {
       const { data, error } = await supabase
         .from('patients')
         .select('*')
+        .neq('role', 'admin')
         .order('created_at', { ascending: false });
 
       if (!error && data) {
-        if (data.length === 0) {
-          const seedRows = initialPatients.map(p => ({
-            id: p.id,
-            name: p.name,
-            email: p.email || '',
-            phone: p.phone || '',
-            date_of_birth: p.dateOfBirth || '',
-            gender: p.gender || 'Male',
-            blood_group: p.bloodGroup || 'A+',
-            address: p.address || '',
-            avatar: p.avatar || '',
-            emergency_contact: p.emergencyContact || '',
-            medical_condition: p.medicalCondition || '',
-            status: p.status || 'Active',
-            registered_date: p.registeredDate || new Date().toISOString().split('T')[0],
-            bio: p.bio || '',
-            role: 'patient'
-          }));
-          await supabase.from('patients').insert(seedRows);
-          setPatients(initialPatients);
-        } else {
-          const mapped = data.map(p => ({
-            id: p.id,
-            name: p.name,
-            email: p.email || '',
-            phone: p.phone || '+1 (555) 000-0000',
-            dateOfBirth: p.date_of_birth || '1995-01-01',
-            gender: p.gender || 'Male',
-            bloodGroup: p.blood_group || 'O+',
-            address: p.address || 'Springfield, OR',
-            avatar: p.avatar || `https://images.unsplash.com/photo-${p.gender === 'Female' ? '1494790108377-be9c29b29330' : '1535713875002-d1d0cf377fde'}?w=300&auto=format&fit=crop&q=80`,
-            emergencyContact: p.emergency_contact || 'Family member',
-            medicalCondition: p.medical_condition || 'General Care',
-            status: p.status || 'Active',
-            registeredDate: p.registered_date || p.created_at?.split('T')[0] || '2026-01-01',
-            bio: p.bio || 'MediCare patient member.',
-            role: p.role || 'patient'
-          }));
-          setPatients(mapped);
-        }
+        const mapped = data.map(p => ({
+          id: p.id,
+          name: p.name,
+          email: p.email || '',
+          phone: p.phone || '',
+          dateOfBirth: p.date_of_birth || '',
+          gender: p.gender || 'Male',
+          bloodGroup: p.blood_group || 'O+',
+          address: p.address || '',
+          avatar: p.avatar || '',
+          emergencyContact: p.emergency_contact || '',
+          medicalCondition: p.medical_condition || 'General Care',
+          status: p.status || 'Active',
+          registeredDate: p.registered_date || p.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
+          bio: p.bio || '',
+          role: p.role || 'patient'
+        }));
+        setPatients(mapped);
+      } else {
+        setPatients([]);
       }
     } catch (e) {
       console.error('Error fetching patients from Supabase:', e);
+      setPatients([]);
     }
   }, []);
 
