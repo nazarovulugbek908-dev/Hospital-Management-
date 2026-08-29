@@ -91,7 +91,7 @@ export function AddDoctorModal({ isOpen, onClose, onSave, doctorToEdit = null })
       ...formData,
       name: formData.name.startsWith('Dr.') ? formData.name : `Dr. ${formData.name}`,
       experience: `${formData.experienceYears} ${lang === 'uz' ? 'yil tajriba' : 'years experience'}`,
-      avatar: formData.avatar.trim() || `https://images.unsplash.com/photo-${formData.gender === 'Female' ? '1594824813682-be4fb6d43e5e' : '1622253692010-333f2da6031d'}?w=300&auto=format&fit=crop&q=80`
+      avatar: formData.avatar.trim() || ''
     };
 
     onSave(payload);
@@ -99,8 +99,8 @@ export function AddDoctorModal({ isOpen, onClose, onSave, doctorToEdit = null })
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
-      <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl border border-slate-200 dark:border-slate-800 my-8">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
+      <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-2xl w-full p-5 sm:p-8 shadow-2xl border border-slate-200 dark:border-slate-800 my-auto max-h-[92vh] overflow-y-auto">
         
         {/* Header */}
         <div className="flex items-center justify-between pb-5 border-b border-slate-100 dark:border-slate-800">

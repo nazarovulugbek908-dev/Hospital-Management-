@@ -27,9 +27,9 @@ export function PatientLayout() {
           onClose={() => setIsMobileMenuOpen(false)}
         />
 
-        {/* Content Viewport - Aligns directly from the left edge and fills available space */}
+        {/* Content Viewport */}
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 w-full">
-          <div className="w-full">
+          <div className="w-full max-w-[1600px] mx-auto">
             <Outlet />
           </div>
         </main>

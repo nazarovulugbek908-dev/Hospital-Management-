@@ -72,7 +72,7 @@ export function AddPatientModal({ isOpen, onClose, onSave, patientToEdit = null 
 
     const payload = {
       ...formData,
-      avatar: formData.avatar.trim() || `https://images.unsplash.com/photo-${formData.gender === 'Female' ? '1494790108377-be9c29b29330' : '1535713875002-d1d0cf377fde'}?w=300&auto=format&fit=crop&q=80`
+      avatar: formData.avatar.trim() || ''
     };
 
     onSave(payload);
@@ -82,8 +82,8 @@ export function AddPatientModal({ isOpen, onClose, onSave, patientToEdit = null 
   const bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
-      <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl border border-slate-200 dark:border-slate-800 my-8">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
+      <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-2xl w-full p-5 sm:p-8 shadow-2xl border border-slate-200 dark:border-slate-800 my-auto max-h-[92vh] overflow-y-auto">
         
         {/* Header */}
         <div className="flex items-center justify-between pb-5 border-b border-slate-100 dark:border-slate-800">
