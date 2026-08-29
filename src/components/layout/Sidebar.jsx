@@ -36,13 +36,13 @@ export function Sidebar({ collapsed, onToggleCollapse }) {
     { label: t('dashboard'), to: '/patient/dashboard', icon: LayoutDashboard },
     { label: t('findDoctors'), to: '/patient/doctors', icon: UserCheck },
     { label: t('bookVisit'), to: '/patient/book-appointment', icon: CalendarCheck },
-    { label: t('appointments'), to: '/patient/appointments', icon: Calendar, badge: stats.upcomingAppointments > 0 ? stats.upcomingAppointments : undefined, badgeColor: 'bg-blue-600' },
+    { label: t('appointments'), to: '/patient/appointments', icon: Calendar },
     { label: t('medicalRecords'), to: '/patient/medical-records', icon: FileText },
   ];
 
   const portalNav = [
-    { label: t('myTasks'), to: '/todo', icon: CheckSquare, badge: pendingTasksCount > 0 ? pendingTasksCount : undefined, badgeColor: 'bg-emerald-500' },
-    { label: t('notifications'), to: '/notifications', icon: Bell, badge: unreadNotifsCount > 0 ? unreadNotifsCount : undefined, badgeColor: 'bg-rose-500' },
+    { label: t('myTasks'), to: '/todo', icon: CheckSquare },
+    { label: t('notifications'), to: '/notifications', icon: Bell },
     { label: t('myProfile'), to: '/profile', icon: User },
     { label: t('settings'), to: '/settings', icon: Settings },
   ];

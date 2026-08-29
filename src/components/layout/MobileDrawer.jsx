@@ -49,13 +49,13 @@ export function MobileDrawer({ isOpen, onClose }) {
     { label: 'Dashboard', to: '/patient/dashboard', icon: LayoutDashboard },
     { label: 'Find Doctors', to: '/patient/doctors', icon: UserCheck },
     { label: 'Book Visit', to: '/patient/book-appointment', icon: CalendarCheck },
-    { label: 'Appointments', to: '/patient/appointments', icon: Calendar, badge: stats.upcomingAppointments > 0 ? stats.upcomingAppointments : undefined, badgeColor: 'bg-blue-600' },
+    { label: 'Appointments', to: '/patient/appointments', icon: Calendar },
     { label: 'Medical Records', to: '/patient/medical-records', icon: FileText },
   ];
 
   const portalNav = [
-    { label: 'My Tasks', to: '/todo', icon: CheckSquare, badge: pendingTasksCount > 0 ? pendingTasksCount : undefined, badgeColor: 'bg-emerald-500' },
-    { label: 'Notifications', to: '/notifications', icon: Bell, badge: unreadNotifsCount > 0 ? unreadNotifsCount : undefined, badgeColor: 'bg-rose-500' },
+    { label: 'My Tasks', to: '/todo', icon: CheckSquare },
+    { label: 'Notifications', to: '/notifications', icon: Bell },
     { label: 'My Profile', to: '/profile', icon: User },
     { label: 'Settings', to: '/settings', icon: Settings },
   ];
