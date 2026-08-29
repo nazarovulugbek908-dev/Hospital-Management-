@@ -9,7 +9,7 @@ import {
   Phone,
   Mail,
   Clock,
-  DollarSign,
+  Banknote,
   Star,
   Calendar,
   Sparkles,
@@ -213,8 +213,8 @@ export function AdminDoctors() {
                     <span className="truncate">{doc.experience || `${doc.experienceYears || 5} yrs exp`}</span>
                   </div>
                   <div className="flex items-center gap-1.5 truncate justify-end font-bold text-slate-900 dark:text-white">
-                    <DollarSign className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
-                    <span>{doc.fee || '$120'}</span>
+                    <Banknote className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
+                    <span>{doc.fee || '150 000 so‘m'}</span>
                   </div>
                   <div className="flex items-center gap-1.5 truncate col-span-2 text-[11px] text-slate-500">
                     <Clock className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />

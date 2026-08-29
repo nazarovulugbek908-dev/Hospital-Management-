@@ -110,7 +110,7 @@ export function DoctorProfile() {
           <div className="flex sm:flex-col items-center justify-between sm:justify-center gap-3 w-full sm:w-auto pt-4 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-slate-800">
             <div className="text-left sm:text-right">
               <span className="text-[10px] font-bold uppercase text-slate-400 block">{t('consultationFee')}</span>
-              <span className="text-2xl font-black text-slate-900 dark:text-white">{doctor.fee || '$120'}</span>
+              <span className="text-2xl font-black text-slate-900 dark:text-white">{doctor.fee || '150 000 so‘m'}</span>
             </div>
 
             <Button

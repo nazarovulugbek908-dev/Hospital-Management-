@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Stethoscope, User, Mail, Phone, Clock, DollarSign, Award, FileText, Image as ImageIcon, Sparkles } from 'lucide-react';
+import { X, Stethoscope, User, Mail, Phone, Clock, Banknote, Award, FileText, Image as ImageIcon, Sparkles } from 'lucide-react';
 import { departmentsList } from '../../data/mockData.js';
 import { useLanguage } from '../../context/LanguageContext.jsx';
 
@@ -13,7 +13,7 @@ export function AddDoctorModal({ isOpen, onClose, onSave, doctorToEdit = null })
     experienceYears: 5,
     email: '',
     phone: '',
-    fee: '$120',
+    fee: '150 000 so‘m',
     workingHours: '09:00 AM - 05:00 PM',
     availableDays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
     education: '',
@@ -33,7 +33,7 @@ export function AddDoctorModal({ isOpen, onClose, onSave, doctorToEdit = null })
         experienceYears: doctorToEdit.experienceYears || 5,
         email: doctorToEdit.email || '',
         phone: doctorToEdit.phone || '',
-        fee: doctorToEdit.fee || '$120',
+        fee: doctorToEdit.fee || '150 000 so‘m',
         workingHours: doctorToEdit.workingHours || '09:00 AM - 05:00 PM',
         availableDays: doctorToEdit.availableDays || ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
         education: doctorToEdit.education || '',
@@ -49,7 +49,7 @@ export function AddDoctorModal({ isOpen, onClose, onSave, doctorToEdit = null })
         experienceYears: 5,
         email: '',
         phone: '',
-        fee: '$120',
+        fee: '150 000 so‘m',
         workingHours: '09:00 AM - 05:00 PM',
         availableDays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
         education: '',
@@ -219,10 +219,10 @@ export function AddDoctorModal({ isOpen, onClose, onSave, doctorToEdit = null })
                 {t('consultationFee')}
               </label>
               <div className="relative">
-                <DollarSign className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <Banknote className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
-                  placeholder="e.g. $120"
+                  placeholder="masalan: 150 000 so‘m"
                   value={formData.fee}
                   onChange={(e) => setFormData({ ...formData, fee: e.target.value })}
                   className="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
