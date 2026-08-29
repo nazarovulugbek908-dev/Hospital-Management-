@@ -7,15 +7,12 @@ import {
   EyeOff,
   LogIn,
   HeartPulse,
-  Sparkles,
-  ShieldCheck,
-  CheckCircle2,
-  CalendarCheck
+  CheckCircle2
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
-import { Button } from '../../components/common/Button.jsx';
 import { Input } from '../../components/common/Input.jsx';
+import { Button } from '../../components/common/Button.jsx';
 import { Logo } from '../../components/common/Logo.jsx';
 
 export function Login() {
@@ -58,21 +55,9 @@ export function Login() {
     }
   };
 
-  const fillDemoPatient = () => {
-    setEmail('patient@hospital.com');
-    setPassword('patient123');
-    setError('');
-  };
-
-  const fillDemoAdmin = () => {
-    setEmail('admin@hospital.com');
-    setPassword('admin123');
-    setError('');
-  };
-
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex transition-colors duration-200">
-      {/* Left Split Screen: Healthcare Illustration & Highlights */}
+      {/* Left Split Screen: Healthcare Highlights */}
       <div className="hidden lg:flex lg:w-1/2 relative bg-gradient-to-br from-blue-700 via-blue-600 to-indigo-800 text-white p-12 flex-col justify-between overflow-hidden shadow-2xl">
         <div className="absolute inset-0 bg-blue-900/20 pointer-events-none" />
         <div className="absolute top-1/4 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl pointer-events-none" />
@@ -100,21 +85,21 @@ export function Login() {
           <div className="space-y-3 pt-4 border-t border-white/20 text-xs">
             <div className="flex items-center gap-2.5">
               <CheckCircle2 className="w-4 h-4 text-emerald-300 flex-shrink-0" />
-              <span>Direct access to 24+ accredited clinical specialists</span>
+              <span>Direct access to accredited clinical specialists</span>
             </div>
             <div className="flex items-center gap-2.5">
               <CheckCircle2 className="w-4 h-4 text-emerald-300 flex-shrink-0" />
-              <span>Real-time appointment calendar & instant slot booking</span>
+              <span>Real-time appointment calendar & instant booking</span>
             </div>
             <div className="flex items-center gap-2.5">
               <CheckCircle2 className="w-4 h-4 text-emerald-300 flex-shrink-0" />
-              <span>Educational medical timeline & recommendations</span>
+              <span>Secure personal health history & consultation records</span>
             </div>
           </div>
         </div>
 
         <div className="relative z-10 text-xs text-blue-100/80">
-          © 2026 MediCare Patient Healthcare System.
+          © 2026 MediCare Healthcare System.
         </div>
       </div>
 
@@ -133,39 +118,8 @@ export function Login() {
               Welcome Back
             </h2>
             <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-              Sign in to manage your appointments and patient profile.
+              Sign in with your email and password to access your portal.
             </p>
-          </div>
-
-          {/* Quick 1-Click Demo Accounts */}
-          <div className="grid grid-cols-2 gap-2.5">
-            <div className="p-3 rounded-2xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-900/60 flex flex-col justify-between gap-2">
-              <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200">
-                <Sparkles className="w-3.5 h-3.5 text-blue-500" />
-                <span>Patient Demo</span>
-              </div>
-              <button
-                type="button"
-                onClick={fillDemoPatient}
-                className="w-full py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold shadow-sm transition-all"
-              >
-                Fill Patient
-              </button>
-            </div>
-
-            <div className="p-3 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-900/60 flex flex-col justify-between gap-2">
-              <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200">
-                <ShieldCheck className="w-3.5 h-3.5 text-indigo-500" />
-                <span>Admin Demo</span>
-              </div>
-              <button
-                type="button"
-                onClick={fillDemoAdmin}
-                className="w-full py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold shadow-sm transition-all"
-              >
-                Fill Admin
-              </button>
-            </div>
           </div>
 
           {error && (
@@ -179,7 +133,7 @@ export function Login() {
             <Input
               label="Email Address"
               type="email"
-              placeholder="patient@hospital.com"
+              placeholder="user@example.com"
               icon={Mail}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
