@@ -166,7 +166,9 @@ export function BookAppointment() {
                     <div className="flex-1 min-w-0">
                       <h4 className="text-xs font-bold text-slate-900 dark:text-white truncate">{doc.name}</h4>
                       <p className="text-[11px] text-blue-600 dark:text-blue-400 font-semibold truncate">{doc.department}</p>
-                      <span className="text-[10px] text-slate-400">{doc.fee || '150 000 so‘m'} • ★ {doc.rating || 5.0}</span>
+                      <span className="text-[10px] text-slate-400">
+                        {doc.fee || '150 000 so‘m'} {doc.reviewsCount > 0 && doc.rating > 0 ? `• ★ ${doc.rating}` : `• ${lang === 'uz' ? 'Yangi' : lang === 'ru' ? 'Новый' : 'New'}`}
+                      </span>
                     </div>
                     {isSelected && <Check className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0" />}
                   </div>

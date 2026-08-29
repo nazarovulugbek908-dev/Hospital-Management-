@@ -200,9 +200,17 @@ export function AdminDoctors() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-1 text-amber-500 text-xs font-bold flex-shrink-0">
-                    <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                    <span>{doc.rating || '5.0'}</span>
+                  <div className="flex items-center gap-1 text-xs font-bold flex-shrink-0">
+                    {doc.reviewsCount > 0 && doc.rating > 0 ? (
+                      <div className="flex items-center gap-1 text-amber-500">
+                        <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                        <span>{doc.rating}</span>
+                      </div>
+                    ) : (
+                      <span className="px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[10px] font-bold">
+                        {lang === 'uz' ? 'Yangi' : lang === 'ru' ? 'Новый' : 'New'}
+                      </span>
+                    )}
                   </div>
                 </div>
 

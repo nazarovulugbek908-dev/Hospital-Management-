@@ -1,12 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Star, Clock, Calendar, Briefcase, Award, ArrowRight } from 'lucide-react';
+import { Star, Clock, Calendar, Briefcase, Award, ArrowRight, Sparkles } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext.jsx';
 import { Avatar, Badge } from '../common/Badge.jsx';
 import { Button } from '../common/Button.jsx';
 
 export function DoctorCard({ doctor, onBook }) {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
 
   return (
     <div className="group rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-5 sm:p-6 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between space-y-4">
@@ -23,11 +23,20 @@ export function DoctorCard({ doctor, onBook }) {
           </div>
 
           <div className="flex flex-col items-end gap-1">
-            <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-900/60 text-xs font-bold">
-              <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-              <span>{doctor.rating}</span>
-            </div>
-            <span className="text-[10px] text-slate-400">({doctor.reviewsCount || 48} {t('reviews')})</span>
+            {doctor.reviewsCount > 0 && doctor.rating > 0 ? (
+              <>
+                <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-900/60 text-xs font-bold">
+                  <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                  <span>{doctor.rating}</span>
+                </div>
+                <span className="text-[10px] text-slate-400">({doctor.reviewsCount} {t('reviews')})</span>
+              </>
+            ) : (
+              <div className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-900/60 text-[11px] font-bold">
+                <Sparkles className="w-3 h-3 text-blue-500" />
+                <span>{lang === 'uz' ? 'Yangi' : lang === 'ru' ? 'Новый' : 'New'}</span>
+              </div>
+            )}
           </div>
         </div>
 

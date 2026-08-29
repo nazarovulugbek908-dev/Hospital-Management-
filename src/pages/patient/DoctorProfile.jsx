@@ -91,10 +91,17 @@ export function DoctorProfile() {
 
             {/* Quick Metrics */}
             <div className="pt-2 flex flex-wrap justify-center sm:justify-start gap-4 text-xs font-semibold text-slate-700 dark:text-slate-300">
-              <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
-                <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
-                <span>{doctor.rating} {t('rating')} ({doctor.reviewsCount || 120} {t('reviews')})</span>
-              </div>
+              {doctor.reviewsCount > 0 && doctor.rating > 0 ? (
+                <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
+                  <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+                  <span>{doctor.rating} {t('rating')} ({doctor.reviewsCount} {t('reviews')})</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400">
+                  <Sparkles className="w-4 h-4 text-blue-500" />
+                  <span>{lang === 'uz' ? 'Yangi mutaxassis (Hozircha baholanmagan)' : lang === 'ru' ? 'Новый специалист (Пока нет отзывов)' : 'New Specialist (No reviews yet)'}</span>
+                </div>
+              )}
               <div className="flex items-center gap-1.5">
                 <Briefcase className="w-4 h-4 text-slate-400" />
                 <span>{doctor.experience}</span>

@@ -381,7 +381,11 @@ export function Dashboard() {
                 <div>
                   <h4 className="text-xs font-bold text-slate-900 dark:text-white">{doc.name}</h4>
                   <p className="text-[11px] text-blue-600 dark:text-blue-400 font-medium">{doc.department}</p>
-                  <span className="text-[10px] text-amber-500 font-semibold">★ {doc.rating}</span>
+                  {doc.reviewsCount > 0 && doc.rating > 0 ? (
+                    <span className="text-[10px] text-amber-500 font-semibold">★ {doc.rating}</span>
+                  ) : (
+                    <span className="text-[10px] text-blue-500 font-semibold">{lang === 'uz' ? 'Yangi' : lang === 'ru' ? 'Новый' : 'New'}</span>
+                  )}
                 </div>
               </div>
 
