@@ -37,30 +37,22 @@ export function AdminSidebar({ collapsed, onToggleCollapse }) {
     {
       label: t('manageDoctors'),
       to: '/admin/doctors',
-      icon: Stethoscope,
-      badge: adminStats.totalDoctors > 0 ? adminStats.totalDoctors : undefined,
-      badgeColor: 'bg-blue-600'
+      icon: Stethoscope
     },
     {
       label: t('managePatients'),
       to: '/admin/patients',
-      icon: Users,
-      badge: adminStats.totalPatients > 0 ? adminStats.totalPatients : undefined,
-      badgeColor: 'bg-emerald-600'
+      icon: Users
     },
     {
       label: t('allAppointments'),
       to: '/admin/appointments',
-      icon: CalendarCheck,
-      badge: adminStats.pendingAppointments > 0 ? adminStats.pendingAppointments : undefined,
-      badgeColor: 'bg-amber-500'
+      icon: CalendarCheck
     },
     {
       label: t('notifications'),
       to: '/notifications',
-      icon: Bell,
-      badge: unreadNotifsCount > 0 ? unreadNotifsCount : undefined,
-      badgeColor: 'bg-rose-500'
+      icon: Bell
     }
   ];
 
@@ -127,15 +119,6 @@ export function AdminSidebar({ collapsed, onToggleCollapse }) {
                     />
                     {!collapsed && (
                       <span className="flex-1 truncate">{item.label}</span>
-                    )}
-                    {!collapsed && item.badge !== undefined && (
-                      <span
-                        className={`px-2 py-0.5 text-[10px] font-black rounded-full text-white ${
-                          item.badgeColor || 'bg-blue-500'
-                        }`}
-                      >
-                        {item.badge}
-                      </span>
                     )}
                   </>
                 )}
