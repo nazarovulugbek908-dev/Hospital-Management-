@@ -1,111 +1,41 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase.js';
 import { useAuth } from './AuthContext.jsx';
-import {
-  initialDoctors,
-  initialPatients,
-  initialAppointments,
-  initialMedicalRecords,
-  initialTasks,
-  initialNotifications
-} from '../data/mockData.js';
+import { initialDoctors, initialPatients } from '../data/mockData.js';
 
 const HospitalContext = createContext();
 
 export function HospitalProvider({ children }) {
-  const { patient } = useAuth();
-  const userId = patient?.id || 'demo-patient';
-  const isDemoUser = userId === 'pat-demo-01' || userId === 'pat-101' || userId === 'demo-patient' || patient?.email === 'patient@hospital.com' || patient?.email === 'admin@hospital.com';
+  const { patient, isAuthenticated, isAdmin } = useAuth();
+  const userId = patient?.id;
 
-  // 1. Doctors Catalog (Admin and Patient shared)
-  const [doctors, setDoctors] = useState(() => {
+  // Primary State Containers (Backed by Supabase)
+  const [doctors, setDoctors] = useState([]);
+  const [patients, setPatients] = useState([]);
+  const [appointments, setAppointments] = useState([]);
+  const [medicalRecords, setMedicalRecords] = useState([]);
+  const [tasks, setTasks] = useState([]);
+  const [notifications, setNotifications] = useState([]);
+  const [loadingData, setLoadingData] = useState(true);
+
+  // Active channel reference for cleanup
+  const realtimeChannelRef = useRef(null);
+
+  // =========================================================
+  // 1. DATA FETCHING FROM SUPABASE
+  // =========================================================
+
+  // Fetch Doctors Catalog
+  const fetchDoctors = useCallback(async () => {
     try {
-      const saved = localStorage.getItem('medicare_doctors');
-      return saved ? JSON.parse(saved) : initialDoctors;
-    } catch (e) {
-      return initialDoctors;
-    }
-  });
+      const { data, error } = await supabase
+        .from('doctors')
+        .select('*')
+        .order('created_at', { ascending: true });
 
-  // 2. Patients List (Admin managed)
-  const [patients, setPatients] = useState(() => {
-    try {
-      const saved = localStorage.getItem('medicare_patients');
-      return saved ? JSON.parse(saved) : initialPatients;
-    } catch (e) {
-      return initialPatients;
-    }
-  });
-
-  // 2. Per-User Scoped Tasks (To-Do List)
-  const [tasks, setTasks] = useState(() => {
-    try {
-      const key = `medicare_tasks_${userId}`;
-      const saved = localStorage.getItem(key);
-      if (saved) return JSON.parse(saved);
-      if (isDemoUser) return initialTasks;
-      return [];
-    } catch (e) {
-      return isDemoUser ? initialTasks : [];
-    }
-  });
-
-  // 3. Per-User Scoped Appointments
-  const [appointments, setAppointments] = useState(() => {
-    try {
-      const key = `medicare_appointments_${userId}`;
-      const saved = localStorage.getItem(key);
-      if (saved) return JSON.parse(saved);
-      return isDemoUser ? initialAppointments : [];
-    } catch (e) {
-      return isDemoUser ? initialAppointments : [];
-    }
-  });
-
-  // 4. Per-User Scoped Medical Records
-  const [medicalRecords, setMedicalRecords] = useState(() => {
-    try {
-      const key = `medicare_medical_records_${userId}`;
-      const saved = localStorage.getItem(key);
-      if (saved) return JSON.parse(saved);
-      return isDemoUser ? initialMedicalRecords : [];
-    } catch (e) {
-      return isDemoUser ? initialMedicalRecords : [];
-    }
-  });
-
-  // 5. Per-User Scoped Notifications
-  const [notifications, setNotifications] = useState(() => {
-    try {
-      const key = `medicare_notifications_${userId}`;
-      const saved = localStorage.getItem(key);
-      if (saved) return JSON.parse(saved);
-      if (isDemoUser) return initialNotifications;
-      return [];
-    } catch (e) {
-      return isDemoUser ? initialNotifications : [];
-    }
-  });
-
-  // Load doctors & patients from Supabase on mount + seed if empty
-  useEffect(() => {
-    let isMounted = true;
-
-    const fetchDoctorsFromSupabase = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('doctors')
-          .select('*')
-          .order('created_at', { ascending: false });
-
-        if (error) {
-          console.log('Supabase doctors fetch error, using localStorage:', error.message);
-          return;
-        }
-
-        // If Supabase table is empty, seed it with initial mock data
-        if (data && data.length === 0 && isMounted) {
-          console.log('Seeding doctors table with initial data...');
+      if (!error && data) {
+        if (data.length === 0) {
+          // If doctors table is empty, seed with initial catalog
           const seedRows = initialDoctors.map(doc => ({
             id: doc.id,
             name: doc.name,
@@ -122,55 +52,46 @@ export function HospitalProvider({ children }) {
             avatar: doc.avatar || ''
           }));
           await supabase.from('doctors').insert(seedRows);
-          // Keep using initialDoctors from localStorage
-          return;
-        }
-
-        if (data && data.length > 0 && isMounted) {
-          // Merge Supabase data with existing local data to preserve extra fields
-          const existingDoctors = doctors;
-          const existingMap = {};
-          existingDoctors.forEach(doc => { existingMap[doc.id] = doc; });
-
+          setDoctors(initialDoctors);
+        } else {
           const mapped = data.map(d => ({
-            ...(existingMap[d.id] || {}), // Keep existing fields (email, phone, languages etc.)
             id: d.id,
             name: d.name,
-            department: d.department || existingMap[d.id]?.department || '',
-            specialization: d.specialization || existingMap[d.id]?.specialization || '',
-            experience: d.experience || existingMap[d.id]?.experience || '',
-            rating: parseFloat(d.rating) || existingMap[d.id]?.rating || 5.0,
-            reviewsCount: d.reviews_count || existingMap[d.id]?.reviewsCount || 0,
-            availability: d.availability || existingMap[d.id]?.availability || 'Available Today',
-            workingHours: d.working_hours || existingMap[d.id]?.workingHours || '09:00 AM - 05:00 PM',
-            fee: d.fee || existingMap[d.id]?.fee || '$100',
-            education: d.education || existingMap[d.id]?.education || '',
-            biography: d.biography || existingMap[d.id]?.biography || '',
-            avatar: d.avatar || existingMap[d.id]?.avatar || ''
+            department: d.department || 'General Medicine',
+            specialization: d.specialization || 'Attending Specialist',
+            experience: d.experience || '5+ years experience',
+            experienceYears: parseInt(d.experience) || 5,
+            rating: parseFloat(d.rating) || 5.0,
+            reviewsCount: d.reviews_count || 0,
+            availability: d.availability || 'Available Today',
+            availableDays: d.available_days || ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+            workingHours: d.working_hours || '09:00 AM - 05:00 PM',
+            languages: d.languages || ['English', 'Uzbek'],
+            fee: d.fee || '$100',
+            education: d.education || 'MD, Medical School Graduate',
+            biography: d.biography || 'Specialist healthcare professional at MediCare Hospital.',
+            avatar: d.avatar || 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=300&auto=format&fit=crop&q=80',
+            email: d.email || `${d.name.toLowerCase().replace(/[^a-z]/g, '')}@medicare.org`,
+            phone: d.phone || '+1 (555) 234-5678'
           }));
           setDoctors(mapped);
-          localStorage.setItem('medicare_doctors', JSON.stringify(mapped));
         }
-      } catch (e) {
-        console.log('Supabase doctors fetch fallback to localStorage');
       }
-    };
+    } catch (e) {
+      console.error('Error fetching doctors from Supabase:', e);
+    }
+  }, []);
 
-    const fetchPatientsFromSupabase = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('patients')
-          .select('*')
-          .order('created_at', { ascending: false });
+  // Fetch Patients List
+  const fetchPatients = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from('patients')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-        if (error) {
-          console.log('Supabase patients fetch error, using localStorage:', error.message);
-          return;
-        }
-
-        // If Supabase table is empty, seed it with initial mock data
-        if (data && data.length === 0 && isMounted) {
-          console.log('Seeding patients table with initial data...');
+      if (!error && data) {
+        if (data.length === 0) {
           const seedRows = initialPatients.map(p => ({
             id: p.id,
             name: p.name,
@@ -184,304 +105,475 @@ export function HospitalProvider({ children }) {
             emergency_contact: p.emergencyContact || '',
             medical_condition: p.medicalCondition || '',
             status: p.status || 'Active',
-            registered_date: p.registeredDate || '',
+            registered_date: p.registeredDate || new Date().toISOString().split('T')[0],
             bio: p.bio || '',
             role: 'patient'
           }));
           await supabase.from('patients').insert(seedRows);
-          // Keep using initialPatients from localStorage
-          return;
-        }
-
-        if (data && data.length > 0 && isMounted) {
+          setPatients(initialPatients);
+        } else {
           const mapped = data.map(p => ({
             id: p.id,
             name: p.name,
             email: p.email || '',
-            phone: p.phone || '',
-            dateOfBirth: p.date_of_birth || '',
+            phone: p.phone || '+1 (555) 000-0000',
+            dateOfBirth: p.date_of_birth || '1995-01-01',
             gender: p.gender || 'Male',
-            bloodGroup: p.blood_group || 'A+',
-            address: p.address || '',
-            avatar: p.avatar || '',
-            emergencyContact: p.emergency_contact || '',
-            medicalCondition: p.medical_condition || '',
+            bloodGroup: p.blood_group || 'O+',
+            address: p.address || 'Springfield, OR',
+            avatar: p.avatar || `https://images.unsplash.com/photo-${p.gender === 'Female' ? '1494790108377-be9c29b29330' : '1535713875002-d1d0cf377fde'}?w=300&auto=format&fit=crop&q=80`,
+            emergencyContact: p.emergency_contact || 'Family member',
+            medicalCondition: p.medical_condition || 'General Care',
             status: p.status || 'Active',
-            registeredDate: p.registered_date || '',
-            bio: p.bio || '',
-            role: 'patient'
+            registeredDate: p.registered_date || p.created_at?.split('T')[0] || '2026-01-01',
+            bio: p.bio || 'MediCare patient member.',
+            role: p.role || 'patient'
           }));
           setPatients(mapped);
-          localStorage.setItem('medicare_patients', JSON.stringify(mapped));
         }
-      } catch (e) {
-        console.log('Supabase patients fetch fallback to localStorage');
       }
-    };
-
-    fetchDoctorsFromSupabase();
-    fetchPatientsFromSupabase();
-
-    return () => { isMounted = false; };
+    } catch (e) {
+      console.error('Error fetching patients from Supabase:', e);
+    }
   }, []);
 
-  // Load user-scoped data from Supabase on Login / Patient Change
-  useEffect(() => {
-    if (!patient || isDemoUser) return;
+  // Fetch Appointments
+  const fetchAppointments = useCallback(async () => {
+    try {
+      let query = supabase.from('appointments').select('*').order('created_at', { ascending: false });
 
+      // If user is regular patient, fetch their appointments + any matches by email/user_id
+      if (userId && !isAdmin) {
+        query = query.or(`user_id.eq.${userId},user_id.eq.${patient?.email}`);
+      }
+
+      const { data, error } = await query;
+      if (!error && data) {
+        const mapped = data.map(a => ({
+          id: a.id,
+          userId: a.user_id,
+          doctorId: a.doctor_id || 'doc-1',
+          doctorName: a.doctor_name,
+          doctorAvatar: a.doctor_avatar || 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=300&auto=format&fit=crop&q=80',
+          department: a.department || 'General Medicine',
+          specialization: a.specialization || 'Attending Physician',
+          date: a.date,
+          time: a.time,
+          reason: a.reason || 'Routine consultation',
+          symptoms: a.symptoms || '',
+          status: a.status || 'Pending',
+          bookingDate: a.booking_date || a.created_at?.split('T')[0] || 'Recently'
+        }));
+        setAppointments(mapped);
+      }
+    } catch (e) {
+      console.error('Error fetching appointments from Supabase:', e);
+    }
+  }, [userId, isAdmin, patient?.email]);
+
+  // Fetch Todos / Tasks
+  const fetchTasks = useCallback(async () => {
+    if (!userId) {
+      setTasks([]);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('todos')
+        .select('*')
+        .or(`user_id.eq.${userId},user_id.eq.${patient?.email}`)
+        .order('created_at', { ascending: false });
+
+      if (!error && data) {
+        const mapped = data.map(t => ({
+          id: t.id,
+          userId: t.user_id,
+          title: t.title,
+          description: t.description || '',
+          dueDate: t.due_date || '',
+          priority: t.priority || 'Medium',
+          category: t.category || 'Personal',
+          status: t.status || 'Todo'
+        }));
+        setTasks(mapped);
+      }
+    } catch (e) {
+      console.error('Error fetching tasks from Supabase:', e);
+    }
+  }, [userId, patient?.email]);
+
+  // Fetch Notifications
+  const fetchNotifications = useCallback(async () => {
+    if (!userId) {
+      setNotifications([]);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .or(`user_id.eq.${userId},user_id.eq.${patient?.email}`)
+        .order('created_at', { ascending: false });
+
+      if (!error && data) {
+        const mapped = data.map(n => ({
+          id: n.id,
+          userId: n.user_id,
+          title: n.title,
+          message: n.message,
+          type: n.type || 'info',
+          read: n.read || false,
+          timestamp: n.timestamp || 'Just now',
+          date: n.date || n.created_at?.split('T')[0] || 'Today'
+        }));
+        setNotifications(mapped);
+      }
+    } catch (e) {
+      console.error('Error fetching notifications from Supabase:', e);
+    }
+  }, [userId, patient?.email]);
+
+  // Fetch Medical Records
+  const fetchMedicalRecords = useCallback(async () => {
+    if (!userId) {
+      setMedicalRecords([]);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('medical_records')
+        .select('*')
+        .or(`user_id.eq.${userId},user_id.eq.${patient?.email}`)
+        .order('created_at', { ascending: false });
+
+      if (!error && data) {
+        const mapped = data.map(r => ({
+          id: r.id,
+          userId: r.user_id,
+          date: r.date,
+          doctor: r.doctor,
+          department: r.department,
+          diagnosis: r.diagnosis,
+          recommendations: r.recommendations || '',
+          doctorNotes: r.doctor_notes || ''
+        }));
+        setMedicalRecords(mapped);
+      }
+    } catch (e) {
+      console.error('Error fetching medical records from Supabase:', e);
+    }
+  }, [userId, patient?.email]);
+
+  // Load all data on mount or when user/role changes
+  useEffect(() => {
     let isMounted = true;
 
-    // Fetch user's tasks from Supabase
-    const fetchSupabaseTodos = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('todos')
-          .select('*')
-          .eq('user_id', userId)
-          .order('created_at', { ascending: false });
-
-        if (!error && data && data.length > 0 && isMounted) {
-          const mapped = data.map(t => ({
-            id: t.id,
-            userId: t.user_id,
-            title: t.title,
-            description: t.description || '',
-            dueDate: t.due_date || '',
-            priority: t.priority || 'Medium',
-            category: t.category || 'Personal',
-            status: t.status || 'Todo'
-          }));
-          setTasks(mapped);
-          localStorage.setItem(`medicare_tasks_${userId}`, JSON.stringify(mapped));
-        }
-      } catch (e) {
-        // Table not created yet or offline
-      }
+    const loadAll = async () => {
+      setLoadingData(true);
+      await Promise.all([
+        fetchDoctors(),
+        fetchPatients(),
+        fetchAppointments(),
+        fetchTasks(),
+        fetchNotifications(),
+        fetchMedicalRecords()
+      ]);
+      if (isMounted) setLoadingData(false);
     };
 
-    // Fetch user's appointments from Supabase
-    const fetchSupabaseAppointments = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('appointments')
-          .select('*')
-          .eq('user_id', userId)
-          .order('created_at', { ascending: false });
+    loadAll();
 
-        if (!error && data && data.length > 0 && isMounted) {
-          const mapped = data.map(a => ({
-            id: a.id,
-            userId: a.user_id,
-            doctorId: a.doctor_id,
-            doctorName: a.doctor_name,
-            doctorAvatar: a.doctor_avatar,
-            department: a.department,
-            specialization: a.specialization,
-            date: a.date,
-            time: a.time,
-            reason: a.reason,
-            symptoms: a.symptoms,
-            status: a.status,
-            bookingDate: a.booking_date
-          }));
-          setAppointments(mapped);
-          localStorage.setItem(`medicare_appointments_${userId}`, JSON.stringify(mapped));
+    return () => { isMounted = false; };
+  }, [fetchDoctors, fetchPatients, fetchAppointments, fetchTasks, fetchNotifications, fetchMedicalRecords]);
+
+  // =========================================================
+  // 2. SUPABASE REALTIME MULTI-TAB SYNCHRONIZATION
+  // =========================================================
+  useEffect(() => {
+    // Create a centralized realtime subscription channel
+    const channel = supabase
+      .channel('medicare_realtime_channel')
+      // 1. Doctors realtime
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'doctors' },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            const d = payload.new;
+            const newDoc = {
+              id: d.id,
+              name: d.name,
+              department: d.department || 'General Medicine',
+              specialization: d.specialization || 'Attending Specialist',
+              experience: d.experience || '5+ years experience',
+              experienceYears: parseInt(d.experience) || 5,
+              rating: parseFloat(d.rating) || 5.0,
+              reviewsCount: d.reviews_count || 0,
+              availability: d.availability || 'Available Today',
+              availableDays: d.available_days || ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+              workingHours: d.working_hours || '09:00 AM - 05:00 PM',
+              languages: d.languages || ['English', 'Uzbek'],
+              fee: d.fee || '$100',
+              education: d.education || 'MD Graduate',
+              biography: d.biography || '',
+              avatar: d.avatar || 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=300&auto=format&fit=crop&q=80',
+              email: d.email || `${d.name.toLowerCase().replace(/[^a-z]/g, '')}@medicare.org`,
+              phone: d.phone || '+1 (555) 234-5678'
+            };
+            setDoctors(prev => {
+              if (prev.some(x => x.id === newDoc.id)) return prev;
+              return [newDoc, ...prev];
+            });
+          } else if (payload.eventType === 'UPDATE') {
+            const d = payload.new;
+            setDoctors(prev => prev.map(x => x.id === d.id ? { ...x, ...d, reviewsCount: d.reviews_count, workingHours: d.working_hours } : x));
+          } else if (payload.eventType === 'DELETE') {
+            setDoctors(prev => prev.filter(x => x.id !== payload.old.id));
+          }
         }
-      } catch (e) {
-        // Fallback
-      }
-    };
-
-    // Fetch user's notifications from Supabase
-    const fetchSupabaseNotifications = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('notifications')
-          .select('*')
-          .eq('user_id', userId)
-          .order('created_at', { ascending: false });
-
-        if (!error && data && data.length > 0 && isMounted) {
-          const mapped = data.map(n => ({
-            id: n.id,
-            userId: n.user_id,
-            title: n.title,
-            message: n.message,
-            type: n.type || 'info',
-            read: n.read || false,
-            timestamp: n.timestamp || 'Just now',
-            date: n.date || ''
-          }));
-          setNotifications(mapped);
-          localStorage.setItem(`medicare_notifications_${userId}`, JSON.stringify(mapped));
+      )
+      // 2. Patients realtime
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'patients' },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            const p = payload.new;
+            const newPat = {
+              id: p.id,
+              name: p.name,
+              email: p.email || '',
+              phone: p.phone || '+1 (555) 000-0000',
+              dateOfBirth: p.date_of_birth || '1995-01-01',
+              gender: p.gender || 'Male',
+              bloodGroup: p.blood_group || 'O+',
+              address: p.address || 'Springfield, OR',
+              avatar: p.avatar || `https://images.unsplash.com/photo-${p.gender === 'Female' ? '1494790108377-be9c29b29330' : '1535713875002-d1d0cf377fde'}?w=300&auto=format&fit=crop&q=80`,
+              emergencyContact: p.emergency_contact || 'Family member',
+              medicalCondition: p.medical_condition || 'General Care',
+              status: p.status || 'Active',
+              registeredDate: p.registered_date || p.created_at?.split('T')[0] || '2026-01-01',
+              bio: p.bio || 'MediCare patient member.',
+              role: p.role || 'patient'
+            };
+            setPatients(prev => {
+              if (prev.some(x => x.id === newPat.id)) return prev;
+              return [newPat, ...prev];
+            });
+          } else if (payload.eventType === 'UPDATE') {
+            const p = payload.new;
+            setPatients(prev => prev.map(x => x.id === p.id ? { ...x, ...p, dateOfBirth: p.date_of_birth, bloodGroup: p.blood_group, emergencyContact: p.emergency_contact, medicalCondition: p.medical_condition } : x));
+          } else if (payload.eventType === 'DELETE') {
+            setPatients(prev => prev.filter(x => x.id !== payload.old.id));
+          }
         }
-      } catch (e) {
-        // Fallback
-      }
-    };
+      )
+      // 3. Appointments realtime
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'appointments' },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            const a = payload.new;
+            const newApt = {
+              id: a.id,
+              userId: a.user_id,
+              doctorId: a.doctor_id,
+              doctorName: a.doctor_name,
+              doctorAvatar: a.doctor_avatar,
+              department: a.department,
+              specialization: a.specialization,
+              date: a.date,
+              time: a.time,
+              reason: a.reason,
+              symptoms: a.symptoms,
+              status: a.status,
+              bookingDate: a.booking_date
+            };
+            // If admin or matching user
+            if (isAdmin || a.user_id === userId || a.user_id === patient?.email) {
+              setAppointments(prev => {
+                if (prev.some(x => x.id === newApt.id)) return prev;
+                return [newApt, ...prev];
+              });
+            }
+          } else if (payload.eventType === 'UPDATE') {
+            const a = payload.new;
+            setAppointments(prev => prev.map(x => x.id === a.id ? { ...x, ...a, userId: a.user_id, doctorId: a.doctor_id, doctorName: a.doctor_name, bookingDate: a.booking_date } : x));
+          } else if (payload.eventType === 'DELETE') {
+            setAppointments(prev => prev.filter(x => x.id !== payload.old.id));
+          }
+        }
+      )
+      // 4. Tasks (Todos) realtime
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'todos' },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            const t = payload.new;
+            if (t.user_id === userId || t.user_id === patient?.email) {
+              const newTask = {
+                id: t.id,
+                userId: t.user_id,
+                title: t.title,
+                description: t.description || '',
+                dueDate: t.due_date || '',
+                priority: t.priority || 'Medium',
+                category: t.category || 'Personal',
+                status: t.status || 'Todo'
+              };
+              setTasks(prev => {
+                if (prev.some(x => x.id === newTask.id)) return prev;
+                return [newTask, ...prev];
+              });
+            }
+          } else if (payload.eventType === 'UPDATE') {
+            const t = payload.new;
+            if (t.user_id === userId || t.user_id === patient?.email) {
+              setTasks(prev => prev.map(x => x.id === t.id ? { ...x, title: t.title, description: t.description, dueDate: t.due_date, priority: t.priority, category: t.category, status: t.status } : x));
+            }
+          } else if (payload.eventType === 'DELETE') {
+            setTasks(prev => prev.filter(x => x.id !== payload.old.id));
+          }
+        }
+      )
+      // 5. Notifications realtime
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'notifications' },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            const n = payload.new;
+            if (n.user_id === userId || n.user_id === patient?.email) {
+              const newNotif = {
+                id: n.id,
+                userId: n.user_id,
+                title: n.title,
+                message: n.message,
+                type: n.type || 'info',
+                read: n.read || false,
+                timestamp: n.timestamp || 'Just now',
+                date: n.date || 'Today'
+              };
+              setNotifications(prev => {
+                if (prev.some(x => x.id === newNotif.id)) return prev;
+                return [newNotif, ...prev];
+              });
+            }
+          } else if (payload.eventType === 'UPDATE') {
+            const n = payload.new;
+            setNotifications(prev => prev.map(x => x.id === n.id ? { ...x, read: n.read, title: n.title, message: n.message } : x));
+          } else if (payload.eventType === 'DELETE') {
+            setNotifications(prev => prev.filter(x => x.id !== payload.old.id));
+          }
+        }
+      )
+      // 6. Medical records realtime
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'medical_records' },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            const r = payload.new;
+            if (r.user_id === userId || r.user_id === patient?.email) {
+              const newRec = {
+                id: r.id,
+                userId: r.user_id,
+                date: r.date,
+                doctor: r.doctor,
+                department: r.department,
+                diagnosis: r.diagnosis,
+                recommendations: r.recommendations || '',
+                doctorNotes: r.doctor_notes || ''
+              };
+              setMedicalRecords(prev => {
+                if (prev.some(x => x.id === newRec.id)) return prev;
+                return [newRec, ...prev];
+              });
+            }
+          } else if (payload.eventType === 'UPDATE') {
+            const r = payload.new;
+            setMedicalRecords(prev => prev.map(x => x.id === r.id ? { ...x, date: r.date, doctor: r.doctor, department: r.department, diagnosis: r.diagnosis, recommendations: r.recommendations, doctorNotes: r.doctor_notes } : x));
+          } else if (payload.eventType === 'DELETE') {
+            setMedicalRecords(prev => prev.filter(x => x.id !== payload.old.id));
+          }
+        }
+      )
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          // Channel connected
+        }
+      });
 
-    fetchSupabaseTodos();
-    fetchSupabaseAppointments();
-    fetchSupabaseNotifications();
+    realtimeChannelRef.current = channel;
 
     return () => {
-      isMounted = false;
+      if (realtimeChannelRef.current) {
+        supabase.removeChannel(realtimeChannelRef.current);
+      }
     };
-  }, [userId, isDemoUser, patient]);
+  }, [userId, isAdmin, patient?.email]);
 
-  // When active patient changes, sync local state
-  useEffect(() => {
-    if (!patient) return;
-
-    const taskKey = `medicare_tasks_${userId}`;
-    const savedTasks = localStorage.getItem(taskKey);
-    if (savedTasks) {
-      setTasks(JSON.parse(savedTasks));
-    } else if (isDemoUser) {
-      setTasks(initialTasks);
-    } else {
-      const newStarterTasks = [
-        {
-          id: `task-${Date.now()}-1`,
-          userId: userId,
-          title: 'Complete Patient Profile & Health Baseline',
-          description: 'Review emergency contacts, blood group, and medical history in Settings.',
-          dueDate: '2026-08-30',
-          priority: 'High',
-          category: 'Personal',
-          status: 'Todo'
-        },
-        {
-          id: `task-${Date.now()}-2`,
-          userId: userId,
-          title: 'Schedule First General Consultation',
-          description: 'Browse certified physicians and book your initial consultation slot.',
-          dueDate: '2026-09-05',
-          priority: 'Medium',
-          category: 'Medical',
-          status: 'Todo'
-        }
-      ];
-      setTasks(newStarterTasks);
-      localStorage.setItem(taskKey, JSON.stringify(newStarterTasks));
-    }
-
-    const aptKey = `medicare_appointments_${userId}`;
-    const savedApts = localStorage.getItem(aptKey);
-    if (savedApts) {
-      setAppointments(JSON.parse(savedApts));
-    } else if (isDemoUser) {
-      setAppointments(initialAppointments);
-    } else {
-      setAppointments([]);
-    }
-
-    const notifKey = `medicare_notifications_${userId}`;
-    const savedNotifs = localStorage.getItem(notifKey);
-    if (savedNotifs) {
-      setNotifications(JSON.parse(savedNotifs));
-    } else if (isDemoUser) {
-      setNotifications(initialNotifications);
-    } else {
-      const welcomeNotif = [
-        {
-          id: `notif-${Date.now()}`,
-          userId: userId,
-          title: 'Welcome to MediCare 🎉',
-          message: `Welcome ${patient?.name || 'to MediCare'}! Your personal patient dashboard and to-do workspace are ready.`,
-          type: 'success',
-          read: false,
-          timestamp: 'Just now',
-          date: new Date().toISOString().split('T')[0]
-        }
-      ];
-      setNotifications(welcomeNotif);
-      localStorage.setItem(notifKey, JSON.stringify(welcomeNotif));
-    }
-  }, [userId, isDemoUser]);
-
-  // Persist changes locally
-  useEffect(() => {
-    localStorage.setItem('medicare_doctors', JSON.stringify(doctors));
-  }, [doctors]);
-
-  useEffect(() => {
-    localStorage.setItem('medicare_patients', JSON.stringify(patients));
-  }, [patients]);
-
-  useEffect(() => {
-    if (userId) {
-      localStorage.setItem(`medicare_tasks_${userId}`, JSON.stringify(tasks));
-    }
-  }, [tasks, userId]);
-
-  useEffect(() => {
-    if (userId) {
-      localStorage.setItem(`medicare_appointments_${userId}`, JSON.stringify(appointments));
-    }
-  }, [appointments, userId]);
-
-  useEffect(() => {
-    if (userId) {
-      localStorage.setItem(`medicare_medical_records_${userId}`, JSON.stringify(medicalRecords));
-    }
-  }, [medicalRecords, userId]);
-
-  useEffect(() => {
-    if (userId) {
-      localStorage.setItem(`medicare_notifications_${userId}`, JSON.stringify(notifications));
-    }
-  }, [notifications, userId]);
-
-  // ==========================================
-  // DOCTOR OPERATIONS (ADMIN & SHARED) — SUPABASE SYNCED
-  // ==========================================
+  // =========================================================
+  // 3. DOCTOR OPERATIONS (ADMIN & SHARED) — SUPABASE
+  // =========================================================
   const addDoctor = async (doctorData) => {
     const newDoc = {
       id: 'doc-' + Date.now(),
+      name: doctorData.name,
+      department: doctorData.department || 'General Medicine',
+      specialization: doctorData.specialization || 'Attending Physician',
+      experience: doctorData.experience || `${doctorData.experienceYears || 5} years experience`,
+      experienceYears: doctorData.experienceYears || 5,
       rating: 5.0,
       reviewsCount: 0,
-      availability: 'Available Today',
+      availability: doctorData.availability || 'Available Today',
       availableDays: doctorData.availableDays || ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
       workingHours: doctorData.workingHours || '09:00 AM - 05:00 PM',
       languages: doctorData.languages || ['English', 'Uzbek'],
+      fee: doctorData.fee || '$100',
+      education: doctorData.education || 'MD, Medical School Graduate',
+      biography: doctorData.biography || '',
       avatar: doctorData.avatar || `https://images.unsplash.com/photo-${doctorData.gender === 'Female' ? '1594824813682-be4fb6d43e5e' : '1622253692010-333f2da6031d'}?w=300&auto=format&fit=crop&q=80`,
-      ...doctorData
+      email: doctorData.email || `${doctorData.name.toLowerCase().replace(/[^a-z]/g, '')}@medicare.org`,
+      phone: doctorData.phone || '+1 (555) 234-5678'
     };
 
+    // Optimistic update
     setDoctors(prev => [newDoc, ...prev]);
 
-    addNotification({
-      title: 'New Doctor Added',
-      message: `Dr. ${newDoc.name} (${newDoc.specialization || newDoc.department}) has been added to the hospital staff.`,
-      type: 'success'
-    });
-
-    // Sync to Supabase
+    // Insert to Supabase
     try {
-      await supabase.from('doctors').insert({
+      const { error } = await supabase.from('doctors').insert({
         id: newDoc.id,
         name: newDoc.name,
-        department: newDoc.department || '',
-        specialization: newDoc.specialization || '',
-        experience: newDoc.experience || '',
-        rating: newDoc.rating || 5.0,
-        reviews_count: newDoc.reviewsCount || 0,
-        availability: newDoc.availability || 'Available Today',
-        working_hours: newDoc.workingHours || '09:00 AM - 05:00 PM',
-        fee: newDoc.fee || '$100',
-        education: newDoc.education || '',
-        biography: newDoc.biography || '',
-        avatar: newDoc.avatar || ''
+        department: newDoc.department,
+        specialization: newDoc.specialization,
+        experience: newDoc.experience,
+        rating: newDoc.rating,
+        reviews_count: newDoc.reviewsCount,
+        availability: newDoc.availability,
+        working_hours: newDoc.workingHours,
+        fee: newDoc.fee,
+        education: newDoc.education,
+        biography: newDoc.biography,
+        avatar: newDoc.avatar
       });
+
+      if (error) throw error;
     } catch (e) {
-      console.log('Supabase doctor insert fallback:', e.message);
+      console.error('Supabase doctor insert error:', e.message);
     }
 
     return newDoc;
   };
 
   const updateDoctor = async (id, updatedFields) => {
+    // Optimistic update
     setDoctors(prev =>
       prev.map(doc => (doc.id === id ? { ...doc, ...updatedFields } : doc))
     );
@@ -501,53 +593,46 @@ export function HospitalProvider({ children }) {
       if (updatedFields.rating !== undefined) supaFields.rating = updatedFields.rating;
 
       if (Object.keys(supaFields).length > 0) {
-        await supabase.from('doctors').update(supaFields).eq('id', id);
+        const { error } = await supabase.from('doctors').update(supaFields).eq('id', id);
+        if (error) throw error;
       }
     } catch (e) {
-      console.log('Supabase doctor update fallback:', e.message);
+      console.error('Supabase doctor update error:', e.message);
     }
   };
 
   const deleteDoctor = async (id) => {
+    // Optimistic update
     setDoctors(prev => prev.filter(doc => doc.id !== id));
-    addNotification({
-      title: 'Doctor Removed',
-      message: `Doctor record #${id} was removed from hospital directory.`,
-      type: 'info'
-    });
 
-    // Sync to Supabase
+    // Delete in Supabase
     try {
-      await supabase.from('doctors').delete().eq('id', id);
+      const { error } = await supabase.from('doctors').delete().eq('id', id);
+      if (error) throw error;
     } catch (e) {
-      console.log('Supabase doctor delete fallback:', e.message);
+      console.error('Supabase doctor delete error:', e.message);
     }
   };
 
-  // ==========================================
-  // PATIENT OPERATIONS (ADMIN & SHARED) — SUPABASE SYNCED
-  // ==========================================
+  // =========================================================
+  // 4. PATIENT OPERATIONS (ADMIN & SHARED) — SUPABASE
+  // =========================================================
   const addPatient = async (patientData) => {
     const newPatient = {
       id: 'pat-' + Date.now(),
-      status: 'Active',
+      status: patientData.status || 'Active',
       registeredDate: new Date().toISOString().split('T')[0],
       avatar: patientData.avatar || `https://images.unsplash.com/photo-${patientData.gender === 'Female' ? '1494790108377-be9c29b29330' : '1535713875002-d1d0cf377fde'}?w=300&auto=format&fit=crop&q=80`,
       role: 'patient',
       ...patientData
     };
 
+    // Optimistic update
     setPatients(prev => [newPatient, ...prev]);
 
-    addNotification({
-      title: 'New Patient Registered',
-      message: `Patient ${newPatient.name} has been enrolled in the hospital system.`,
-      type: 'success'
-    });
-
-    // Sync to Supabase
+    // Insert to Supabase
     try {
-      await supabase.from('patients').insert({
+      const { error } = await supabase.from('patients').insert({
         id: newPatient.id,
         name: newPatient.name,
         email: newPatient.email || '',
@@ -558,20 +643,23 @@ export function HospitalProvider({ children }) {
         address: newPatient.address || '',
         avatar: newPatient.avatar || '',
         emergency_contact: newPatient.emergencyContact || '',
-        medical_condition: newPatient.medicalCondition || '',
+        medical_condition: newPatient.medicalCondition || 'General Care',
         status: newPatient.status || 'Active',
         registered_date: newPatient.registeredDate,
         bio: newPatient.bio || '',
         role: 'patient'
       });
+
+      if (error) throw error;
     } catch (e) {
-      console.log('Supabase patient insert fallback:', e.message);
+      console.error('Supabase patient insert error:', e.message);
     }
 
     return newPatient;
   };
 
   const updatePatient = async (id, updatedFields) => {
+    // Optimistic update
     setPatients(prev =>
       prev.map(p => (p.id === id ? { ...p, ...updatedFields } : p))
     );
@@ -593,205 +681,183 @@ export function HospitalProvider({ children }) {
       if (updatedFields.bio !== undefined) supaFields.bio = updatedFields.bio;
 
       if (Object.keys(supaFields).length > 0) {
-        await supabase.from('patients').update(supaFields).eq('id', id);
+        const { error } = await supabase.from('patients').update(supaFields).eq('id', id);
+        if (error) throw error;
       }
     } catch (e) {
-      console.log('Supabase patient update fallback:', e.message);
+      console.error('Supabase patient update error:', e.message);
     }
   };
 
   const deletePatient = async (id) => {
+    // Optimistic update
     setPatients(prev => prev.filter(p => p.id !== id));
-    addNotification({
-      title: 'Patient Record Deleted',
-      message: `Patient record #${id} has been archived/removed.`,
-      type: 'warning'
-    });
 
-    // Sync to Supabase
+    // Delete in Supabase
     try {
-      await supabase.from('patients').delete().eq('id', id);
+      const { error } = await supabase.from('patients').delete().eq('id', id);
+      if (error) throw error;
     } catch (e) {
-      console.log('Supabase patient delete fallback:', e.message);
+      console.error('Supabase patient delete error:', e.message);
     }
   };
 
-  // ==========================================
-  // APPOINTMENT OPERATIONS
-  // ==========================================
-  const updateAppointmentStatus = async (id, status) => {
-    setAppointments(prev =>
-      prev.map(apt => (apt.id === id ? { ...apt, status } : apt))
-    );
-
-    addNotification({
-      title: `Appointment Status: ${status}`,
-      message: `Appointment #${id} status changed to ${status}.`,
-      type: status === 'Cancelled' ? 'warning' : 'success'
-    });
-
-    try {
-      if (!isDemoUser) {
-        await supabase.from('appointments').update({ status }).eq('id', id);
-      }
-    } catch (e) {
-      // Fallback
-    }
-  };
-
-  // ==========================================
-  // APPOINTMENT OPERATIONS (SUPABASE SYNCED)
-  // ==========================================
+  // =========================================================
+  // 5. APPOINTMENT OPERATIONS (SUPABASE)
+  // =========================================================
   const bookAppointment = async (appointmentData) => {
+    const activeUserId = userId || patient?.email || 'user-' + Date.now();
     const newApt = {
       id: 'apt-' + Date.now(),
-      userId: userId,
+      userId: activeUserId,
       status: 'Pending',
       bookingDate: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
       ...appointmentData
     };
 
+    // Optimistic update
     setAppointments(prev => [newApt, ...prev]);
 
-    // Create notification alert
-    addNotification({
+    // Add alert notification
+    await addNotification({
       title: 'Appointment Requested',
       message: `Your appointment request with ${newApt.doctorName} for ${newApt.date} at ${newApt.time} is pending confirmation.`,
       type: 'info'
     });
 
-    // Sync with Supabase Database
+    // Insert to Supabase Database
     try {
-      if (!isDemoUser) {
-        await supabase.from('appointments').insert({
-          id: newApt.id,
-          user_id: userId,
-          doctor_id: newApt.doctorId || 'doc-1',
-          doctor_name: newApt.doctorName,
-          doctor_avatar: newApt.doctorAvatar || '',
-          department: newApt.department || 'General',
-          specialization: newApt.specialization || 'Attending Physician',
-          date: newApt.date,
-          time: newApt.time,
-          reason: newApt.reason || '',
-          symptoms: newApt.symptoms || '',
-          status: 'Pending',
-          booking_date: newApt.bookingDate
-        });
-      }
+      const { error } = await supabase.from('appointments').insert({
+        id: newApt.id,
+        user_id: activeUserId,
+        doctor_id: newApt.doctorId || 'doc-1',
+        doctor_name: newApt.doctorName,
+        doctor_avatar: newApt.doctorAvatar || '',
+        department: newApt.department || 'General Medicine',
+        specialization: newApt.specialization || 'Attending Specialist',
+        date: newApt.date,
+        time: newApt.time,
+        reason: newApt.reason || 'General Consultation',
+        symptoms: newApt.symptoms || '',
+        status: 'Pending',
+        booking_date: newApt.bookingDate
+      });
+
+      if (error) throw error;
     } catch (e) {
-      // Local fallback active
+      console.error('Supabase book appointment error:', e.message);
     }
 
     return newApt;
   };
 
-  const cancelAppointment = async (id) => {
+  const updateAppointmentStatus = async (id, status) => {
+    // Optimistic update
     setAppointments(prev =>
-      prev.map(apt => {
-        if (apt.id === id) {
-          return { ...apt, status: 'Cancelled' };
-        }
-        return apt;
-      })
+      prev.map(apt => (apt.id === id ? { ...apt, status } : apt))
     );
 
     const target = appointments.find(a => a.id === id);
     if (target) {
-      addNotification({
-        title: 'Appointment Cancelled',
-        message: `Your appointment with ${target.doctorName} on ${target.date} has been cancelled.`,
-        type: 'warning'
+      await addNotification({
+        title: `Appointment Status: ${status}`,
+        message: `Appointment #${id} with ${target.doctorName} changed to ${status}.`,
+        type: status === 'Cancelled' ? 'warning' : 'success'
       });
     }
 
-    // Sync with Supabase
+    // Sync to Supabase
     try {
-      if (!isDemoUser) {
-        await supabase.from('appointments').update({ status: 'Cancelled' }).eq('id', id);
-      }
+      const { error } = await supabase.from('appointments').update({ status }).eq('id', id);
+      if (error) throw error;
     } catch (e) {
-      // Fallback
+      console.error('Supabase update appointment error:', e.message);
     }
+  };
+
+  const cancelAppointment = async (id) => {
+    return updateAppointmentStatus(id, 'Cancelled');
   };
 
   const getAppointmentById = (id) => {
     return appointments.find(a => a.id === id);
   };
 
-  // ==========================================
-  // TASK / TO-DO OPERATIONS (SUPABASE SYNCED)
-  // ==========================================
+  // =========================================================
+  // 6. TASK / TO-DO OPERATIONS (SUPABASE)
+  // =========================================================
   const addTask = async (taskData) => {
+    const activeUserId = userId || patient?.email || 'user-' + Date.now();
     const newTask = {
       id: 'task-' + Date.now(),
-      userId: userId,
+      userId: activeUserId,
       status: taskData.status || 'Todo',
       priority: taskData.priority || 'Medium',
       category: taskData.category || 'Personal',
-      ...taskData
+      title: taskData.title,
+      description: taskData.description || '',
+      dueDate: taskData.dueDate || ''
     };
 
+    // Optimistic update
     setTasks(prev => [newTask, ...prev]);
 
-    // Sync to Supabase
+    // Insert to Supabase
     try {
-      if (!isDemoUser) {
-        await supabase.from('todos').insert({
-          id: newTask.id,
-          user_id: userId,
-          title: newTask.title,
-          description: newTask.description || '',
-          due_date: newTask.dueDate || null,
-          priority: newTask.priority || 'Medium',
-          category: newTask.category || 'Personal',
-          status: newTask.status || 'Todo'
-        });
-      }
+      const { error } = await supabase.from('todos').insert({
+        id: newTask.id,
+        user_id: activeUserId,
+        title: newTask.title,
+        description: newTask.description || '',
+        due_date: newTask.dueDate || null,
+        priority: newTask.priority || 'Medium',
+        category: newTask.category || 'Personal',
+        status: newTask.status || 'Todo'
+      });
+
+      if (error) throw error;
     } catch (e) {
-      // Local persistence fallback
+      console.error('Supabase add task error:', e.message);
     }
 
     return newTask;
   };
 
   const updateTask = async (id, updatedFields) => {
+    // Optimistic update
     setTasks(prev =>
-      prev.map(t => {
-        if (t.id === id) {
-          return { ...t, ...updatedFields };
-        }
-        return t;
-      })
+      prev.map(t => (t.id === id ? { ...t, ...updatedFields } : t))
     );
 
     // Sync to Supabase
     try {
-      if (!isDemoUser) {
-        await supabase.from('todos').update({
-          title: updatedFields.title,
-          description: updatedFields.description,
-          due_date: updatedFields.dueDate,
-          priority: updatedFields.priority,
-          category: updatedFields.category,
-          status: updatedFields.status
-        }).eq('id', id);
+      const supaFields = {};
+      if (updatedFields.title !== undefined) supaFields.title = updatedFields.title;
+      if (updatedFields.description !== undefined) supaFields.description = updatedFields.description;
+      if (updatedFields.dueDate !== undefined) supaFields.due_date = updatedFields.dueDate;
+      if (updatedFields.priority !== undefined) supaFields.priority = updatedFields.priority;
+      if (updatedFields.category !== undefined) supaFields.category = updatedFields.category;
+      if (updatedFields.status !== undefined) supaFields.status = updatedFields.status;
+
+      if (Object.keys(supaFields).length > 0) {
+        const { error } = await supabase.from('todos').update(supaFields).eq('id', id);
+        if (error) throw error;
       }
     } catch (e) {
-      // Fallback
+      console.error('Supabase update task error:', e.message);
     }
   };
 
   const deleteTask = async (id) => {
+    // Optimistic update
     setTasks(prev => prev.filter(t => t.id !== id));
 
-    // Sync to Supabase
+    // Delete in Supabase
     try {
-      if (!isDemoUser) {
-        await supabase.from('todos').delete().eq('id', id);
-      }
+      const { error } = await supabase.from('todos').delete().eq('id', id);
+      if (error) throw error;
     } catch (e) {
-      // Fallback
+      console.error('Supabase delete task error:', e.message);
     }
   };
 
@@ -809,21 +875,21 @@ export function HospitalProvider({ children }) {
 
     // Sync to Supabase
     try {
-      if (!isDemoUser) {
-        await supabase.from('todos').update({ status: nextStatus }).eq('id', id);
-      }
+      const { error } = await supabase.from('todos').update({ status: nextStatus }).eq('id', id);
+      if (error) throw error;
     } catch (e) {
-      // Fallback
+      console.error('Supabase toggle task error:', e.message);
     }
   };
 
-  // ==========================================
-  // NOTIFICATION OPERATIONS (SUPABASE SYNCED)
-  // ==========================================
+  // =========================================================
+  // 7. NOTIFICATION OPERATIONS (SUPABASE)
+  // =========================================================
   const addNotification = async ({ title, message, type = 'info' }) => {
+    const activeUserId = userId || patient?.email || 'user-' + Date.now();
     const newNotif = {
       id: 'notif-' + Date.now(),
-      userId: userId,
+      userId: activeUserId,
       title,
       message,
       type,
@@ -832,35 +898,38 @@ export function HospitalProvider({ children }) {
       date: new Date().toISOString().split('T')[0]
     };
 
+    // Optimistic update
     setNotifications(prev => [newNotif, ...prev]);
 
+    // Insert to Supabase
     try {
-      if (!isDemoUser) {
-        await supabase.from('notifications').insert({
-          id: newNotif.id,
-          user_id: userId,
-          title: newNotif.title,
-          message: newNotif.message,
-          type: newNotif.type,
-          read: false,
-          timestamp: newNotif.timestamp,
-          date: newNotif.date
-        });
-      }
+      const { error } = await supabase.from('notifications').insert({
+        id: newNotif.id,
+        user_id: activeUserId,
+        title: newNotif.title,
+        message: newNotif.message,
+        type: newNotif.type,
+        read: false,
+        timestamp: newNotif.timestamp,
+        date: newNotif.date
+      });
+
+      if (error) throw error;
     } catch (e) {
-      // Fallback
+      console.error('Supabase notification insert error:', e.message);
     }
+
+    return newNotif;
   };
 
   const markNotificationAsRead = async (id) => {
     setNotifications(prev => prev.map(n => (n.id === id ? { ...n, read: true } : n)));
 
     try {
-      if (!isDemoUser) {
-        await supabase.from('notifications').update({ read: true }).eq('id', id);
-      }
+      const { error } = await supabase.from('notifications').update({ read: true }).eq('id', id);
+      if (error) throw error;
     } catch (e) {
-      // Fallback
+      console.error('Supabase mark notification error:', e.message);
     }
   };
 
@@ -868,11 +937,16 @@ export function HospitalProvider({ children }) {
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
 
     try {
-      if (!isDemoUser) {
-        await supabase.from('notifications').update({ read: true }).eq('user_id', userId);
+      const activeUserId = userId || patient?.email;
+      if (activeUserId) {
+        const { error } = await supabase
+          .from('notifications')
+          .update({ read: true })
+          .or(`user_id.eq.${activeUserId},user_id.eq.${patient?.email}`);
+        if (error) throw error;
       }
     } catch (e) {
-      // Fallback
+      console.error('Supabase mark all notifications error:', e.message);
     }
   };
 
@@ -880,19 +954,93 @@ export function HospitalProvider({ children }) {
     setNotifications(prev => prev.filter(n => n.id !== id));
 
     try {
-      if (!isDemoUser) {
-        await supabase.from('notifications').delete().eq('id', id);
-      }
+      const { error } = await supabase.from('notifications').delete().eq('id', id);
+      if (error) throw error;
     } catch (e) {
-      // Fallback
+      console.error('Supabase delete notification error:', e.message);
     }
   };
 
-  // Computed metrics for active patient & admin
+  // =========================================================
+  // 8. MEDICAL RECORDS OPERATIONS (SUPABASE)
+  // =========================================================
+  const addMedicalRecord = async (recordData) => {
+    const activeUserId = userId || patient?.email || 'user-' + Date.now();
+    const newRecord = {
+      id: 'rec-' + Date.now(),
+      userId: activeUserId,
+      date: recordData.date || new Date().toISOString().split('T')[0],
+      doctor: recordData.doctor || 'Dr. Medical Specialist',
+      department: recordData.department || 'General Medicine',
+      diagnosis: recordData.diagnosis || 'Clinical Checkup',
+      recommendations: recordData.recommendations || 'Standard health observation.',
+      doctorNotes: recordData.doctorNotes || ''
+    };
+
+    setMedicalRecords(prev => [newRecord, ...prev]);
+
+    try {
+      const { error } = await supabase.from('medical_records').insert({
+        id: newRecord.id,
+        user_id: activeUserId,
+        date: newRecord.date,
+        doctor: newRecord.doctor,
+        department: newRecord.department,
+        diagnosis: newRecord.diagnosis,
+        recommendations: newRecord.recommendations,
+        doctor_notes: newRecord.doctorNotes
+      });
+
+      if (error) throw error;
+    } catch (e) {
+      console.error('Supabase add medical record error:', e.message);
+    }
+
+    return newRecord;
+  };
+
+  const updateMedicalRecord = async (id, updatedFields) => {
+    setMedicalRecords(prev =>
+      prev.map(r => (r.id === id ? { ...r, ...updatedFields } : r))
+    );
+
+    try {
+      const supaFields = {};
+      if (updatedFields.date !== undefined) supaFields.date = updatedFields.date;
+      if (updatedFields.doctor !== undefined) supaFields.doctor = updatedFields.doctor;
+      if (updatedFields.department !== undefined) supaFields.department = updatedFields.department;
+      if (updatedFields.diagnosis !== undefined) supaFields.diagnosis = updatedFields.diagnosis;
+      if (updatedFields.recommendations !== undefined) supaFields.recommendations = updatedFields.recommendations;
+      if (updatedFields.doctorNotes !== undefined) supaFields.doctor_notes = updatedFields.doctorNotes;
+
+      if (Object.keys(supaFields).length > 0) {
+        const { error } = await supabase.from('medical_records').update(supaFields).eq('id', id);
+        if (error) throw error;
+      }
+    } catch (e) {
+      console.error('Supabase update medical record error:', e.message);
+      throw e;
+    }
+  };
+
+  const deleteMedicalRecord = async (id) => {
+    setMedicalRecords(prev => prev.filter(r => r.id !== id));
+
+    try {
+      const { error } = await supabase.from('medical_records').delete().eq('id', id);
+      if (error) throw error;
+    } catch (e) {
+      console.error('Supabase delete medical record error:', e.message);
+      throw e;
+    }
+  };
+
+  // =========================================================
+  // 9. COMPUTED METRICS & STATS
+  // =========================================================
   const upcomingList = appointments.filter(a => a.status === 'Confirmed' || a.status === 'Pending');
   const completedList = appointments.filter(a => a.status === 'Completed');
   const pendingList = appointments.filter(a => a.status === 'Pending');
-  const cancelledList = appointments.filter(a => a.status === 'Cancelled');
 
   const stats = {
     upcomingAppointments: upcomingList.length,
@@ -908,11 +1056,10 @@ export function HospitalProvider({ children }) {
     pendingAppointments: pendingList.length,
     confirmedAppointments: appointments.filter(a => a.status === 'Confirmed').length,
     completedAppointments: completedList.length,
-    cancelledAppointments: cancelledList.length
+    cancelledAppointments: appointments.filter(a => a.status === 'Cancelled').length
   };
 
-  // Featured next upcoming appointment for active patient
-  const nextAppointment = appointments.find(a => a.status === 'Confirmed' || a.status === 'Pending') || appointments[0] || null;
+  const nextAppointment = upcomingList[0] || appointments[0] || null;
 
   return (
     <HospitalContext.Provider
@@ -926,30 +1073,44 @@ export function HospitalProvider({ children }) {
         stats,
         adminStats,
         nextAppointment,
+        loadingData,
         userId,
-        // Doctor methods (Admin)
+        // Doctor operations
         addDoctor,
         updateDoctor,
         deleteDoctor,
-        // Patient methods (Admin)
+        // Patient operations
         addPatient,
         updatePatient,
         deletePatient,
-        // Appointment methods
+        // Appointment operations
         bookAppointment,
         cancelAppointment,
-        getAppointmentById,
         updateAppointmentStatus,
-        // Task methods
+        getAppointmentById,
+        // Task operations
         addTask,
         updateTask,
         deleteTask,
         toggleTaskStatus,
-        // Notification methods
+        // Notification operations
         addNotification,
         markNotificationAsRead,
         markAllNotificationsAsRead,
-        deleteNotification
+        deleteNotification,
+        // Medical records operations
+        addMedicalRecord,
+        updateMedicalRecord,
+        deleteMedicalRecord,
+        // Refresh triggers
+        refreshAll: () => {
+          fetchDoctors();
+          fetchPatients();
+          fetchAppointments();
+          fetchTasks();
+          fetchNotifications();
+          fetchMedicalRecords();
+        }
       }}
     >
       {children}

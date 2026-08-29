@@ -254,50 +254,60 @@ export function Dashboard() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
-          {tasks.slice(0, 4).map((task) => {
-            const isCompleted = task.status === 'Completed';
-            return (
-              <div
-                key={task.id}
-                onClick={() => {
-                  toggleTaskStatus(task.id);
-                  if (!isCompleted) showToast(lang === 'uz' ? 'Vazifa bajarildi! 🎉' : lang === 'ru' ? 'Задача выполнена! 🎉' : 'Task completed! 🎉', 'success');
-                }}
-                className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-start gap-3 ${
-                  isCompleted
-                    ? 'bg-slate-50/50 dark:bg-slate-800/30 border-slate-200/60 dark:border-slate-800 opacity-70'
-                    : 'bg-slate-50 dark:bg-slate-800/60 border-slate-100 dark:border-slate-700/60 hover:border-blue-500/50'
-                }`}
-              >
-                <input
-                  type="checkbox"
-                  checked={isCompleted}
-                  onChange={() => {}}
-                  className="mt-0.5 w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500/20 cursor-pointer"
-                />
-                <div className="flex-1 min-w-0">
-                  <h4 className={`text-xs font-bold ${isCompleted ? 'line-through text-slate-400 dark:text-slate-500' : 'text-slate-900 dark:text-white'}`}>
-                    {task.title}
-                  </h4>
-                  {task.description && (
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5">
-                      {task.description}
-                    </p>
-                  )}
-                  <div className="flex items-center gap-2 mt-1.5">
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                      {task.category || 'Personal'}
-                    </span>
-                    <span className={`text-[10px] font-bold ${task.priority === 'High' ? 'text-rose-500' : 'text-slate-400'}`}>
-                      • {task.priority} Priority
-                    </span>
+        {tasks.length === 0 ? (
+          <div className="py-6 text-center text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-2">
+            <p>{lang === 'uz' ? 'Hozircha biriktirilgan vazifalar yo‘q.' : 'No active tasks in your tracker yet.'}</p>
+            <Link to="/todo" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 text-white font-bold text-xs shadow-sm hover:bg-blue-700 transition-colors">
+              <Plus className="w-3.5 h-3.5" />
+              <span>{lang === 'uz' ? 'Vazifa yaratish' : 'Create Task'}</span>
+            </Link>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+            {tasks.slice(0, 4).map((task) => {
+              const isCompleted = task.status === 'Completed';
+              return (
+                <div
+                  key={task.id}
+                  onClick={() => {
+                    toggleTaskStatus(task.id);
+                    if (!isCompleted) showToast(lang === 'uz' ? 'Vazifa bajarildi! 🎉' : lang === 'ru' ? 'Задача выполнена! 🎉' : 'Task completed! 🎉', 'success');
+                  }}
+                  className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-start gap-3 ${
+                    isCompleted
+                      ? 'bg-slate-50/50 dark:bg-slate-800/30 border-slate-200/60 dark:border-slate-800 opacity-70'
+                      : 'bg-slate-50 dark:bg-slate-800/60 border-slate-100 dark:border-slate-700/60 hover:border-blue-500/50'
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={isCompleted}
+                    onChange={() => {}}
+                    className="mt-0.5 w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500/20 cursor-pointer"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <h4 className={`text-xs font-bold ${isCompleted ? 'line-through text-slate-400 dark:text-slate-500' : 'text-slate-900 dark:text-white'}`}>
+                      {task.title}
+                    </h4>
+                    {task.description && (
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5">
+                        {task.description}
+                      </p>
+                    )}
+                    <div className="flex items-center gap-2 mt-1.5">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                        {task.category || 'Personal'}
+                      </span>
+                      <span className={`text-[10px] font-bold ${task.priority === 'High' ? 'text-rose-500' : 'text-slate-400'}`}>
+                        • {task.priority} Priority
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* 4 Quick Action Cards */}

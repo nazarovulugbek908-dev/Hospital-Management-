@@ -27,7 +27,7 @@ export function DoctorProfile() {
   const { t, lang } = useLanguage();
   const navigate = useNavigate();
 
-  const doctor = doctors.find(d => d.id === id) || doctors[0];
+  const doctor = doctors.find(d => d.id === id);
 
   if (!doctor) {
     return (

@@ -4,11 +4,13 @@ import { Button } from '../common/Button.jsx';
 import { Input, Select } from '../common/Input.jsx';
 
 export function TodoModal({ isOpen, onClose, onSave, taskToEdit }) {
+  const getToday = () => new Date().toISOString().split('T')[0];
+
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     priority: 'Medium',
-    dueDate: '2026-08-28',
+    dueDate: getToday(),
     category: 'Personal',
     status: 'Todo'
   });
@@ -21,7 +23,7 @@ export function TodoModal({ isOpen, onClose, onSave, taskToEdit }) {
         title: taskToEdit.title || '',
         description: taskToEdit.description || '',
         priority: taskToEdit.priority || 'Medium',
-        dueDate: taskToEdit.dueDate || '2026-08-28',
+        dueDate: taskToEdit.dueDate || getToday(),
         category: taskToEdit.category || 'Personal',
         status: taskToEdit.status || 'Todo'
       });
@@ -30,7 +32,7 @@ export function TodoModal({ isOpen, onClose, onSave, taskToEdit }) {
         title: '',
         description: '',
         priority: 'Medium',
-        dueDate: '2026-08-28',
+        dueDate: getToday(),
         category: 'Personal',
         status: 'Todo'
       });

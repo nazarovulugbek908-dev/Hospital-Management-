@@ -356,7 +356,7 @@ export function Home() {
         </div>
       </section>
 
-      {/* About & Demo Disclaimer */}
+      {/* About & Production Architecture */}
       <section id="about" className="py-16 bg-slate-50 dark:bg-slate-950">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-6 sm:p-8 shadow-md space-y-4">
@@ -365,24 +365,32 @@ export function Home() {
                 <ShieldCheck className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-slate-900 dark:text-white">Educational Portfolio System</h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Fictional healthcare demonstration with localStorage persistence.</p>
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">Supabase Cloud Healthcare Architecture</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Enterprise PostgreSQL backend with real-time multi-tab synchronization and Row-Level Security.</p>
               </div>
             </div>
 
             <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
               <div>
-                <span className="font-bold text-slate-900 dark:text-white">Demo Patient Account:</span>
+                <span className="font-bold text-slate-900 dark:text-white">Ready for Instant Testing:</span>
                 <p className="text-slate-600 dark:text-slate-300 mt-0.5">
-                  Email: <code className="font-mono bg-white dark:bg-slate-900 px-1.5 py-0.5 rounded">patient@hospital.com</code> | Password: <code className="font-mono bg-white dark:bg-slate-900 px-1.5 py-0.5 rounded">patient123</code>
+                  Sign in with registered Patient or Admin credentials or create a new account in seconds.
                 </p>
               </div>
-              <Link
-                to="/login"
-                className="px-4 py-2 rounded-xl bg-blue-600 text-white font-bold text-xs text-center shadow-sm hover:bg-blue-700 transition-colors whitespace-nowrap"
-              >
-                Sign In Demo
-              </Link>
+              <div className="flex items-center gap-2">
+                <Link
+                  to="/login"
+                  className="px-4 py-2 rounded-xl bg-blue-600 text-white font-bold text-xs text-center shadow-sm hover:bg-blue-700 transition-colors whitespace-nowrap"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  to="/register"
+                  className="px-4 py-2 rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-white font-bold text-xs text-center hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors whitespace-nowrap"
+                >
+                  Register
+                </Link>
+              </div>
             </div>
           </div>
         </div>
@@ -393,10 +401,10 @@ export function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <LogoIcon size="sm" />
-            <span className="font-bold text-slate-800 dark:text-slate-200">MediCare Patient Portal</span>
-            <span>• Educational Portfolio Demo</span>
+            <span className="font-bold text-slate-800 dark:text-slate-200">MediCare Healthcare Management System</span>
+            <span>• Supabase Real-Time Backend</span>
           </div>
-          <p>© 2026 MediCare. Built with React & Tailwind CSS.</p>
+          <p>© 2026 MediCare Inc. All rights reserved.</p>
         </div>
       </footer>
     </div>

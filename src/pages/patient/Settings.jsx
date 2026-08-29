@@ -1,15 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Settings as SettingsIcon,
   User,
-  Lock,
   Bell,
   Palette,
   Save,
-  ShieldCheck,
   Sun,
   Moon,
-  Check
+  Phone,
+  Mail,
+  MapPin,
+  Calendar,
+  Heart,
+  Camera,
+  Trash2
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useTheme } from '../../context/ThemeContext.jsx';
@@ -17,6 +21,7 @@ import { useLanguage } from '../../context/LanguageContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { Button } from '../../components/common/Button.jsx';
 import { Input, Select } from '../../components/common/Input.jsx';
+import { Avatar } from '../../components/common/Badge.jsx';
 
 export function Settings() {
   const { patient, updateProfile } = useAuth();
@@ -24,23 +29,69 @@ export function Settings() {
   const { lang, setLang, t } = useLanguage();
   const { showToast } = useToast();
 
-  const [activeTab, setActiveTab] = useState('account'); // 'account' | 'security' | 'notifications' | 'preferences'
+  const [activeTab, setActiveTab] = useState('account'); // 'account' | 'notifications' | 'preferences'
+  const [savingAccount, setSavingAccount] = useState(false);
+
+  const fileInputRef = useRef(null);
 
   // Account form
   const [accountData, setAccountData] = useState({
     name: patient?.name || '',
     email: patient?.email || '',
     phone: patient?.phone || '',
-    address: patient?.address || ''
+    address: patient?.address || '',
+    dateOfBirth: patient?.dateOfBirth || '',
+    gender: patient?.gender || 'Male',
+    bloodGroup: patient?.bloodGroup || 'O+',
+    emergencyContact: patient?.emergencyContact || '',
+    bio: patient?.bio || '',
+    avatar: patient?.avatar || ''
   });
 
-  // Password form
-  const [passwords, setPasswords] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: ''
-  });
-  const [passError, setPassError] = useState('');
+  useEffect(() => {
+    if (patient) {
+      setAccountData({
+        name: patient.name || '',
+        email: patient.email || '',
+        phone: patient.phone || '',
+        address: patient.address || '',
+        dateOfBirth: patient.dateOfBirth || '',
+        gender: patient.gender || 'Male',
+        bloodGroup: patient.bloodGroup || 'O+',
+        emergencyContact: patient.emergencyContact || '',
+        bio: patient.bio || '',
+        avatar: patient.avatar || ''
+      });
+    }
+  }, [patient]);
+
+  const handleImageFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      showToast(lang === 'uz' ? 'Rasm hajmi 2MB dan oshmasligi kerak.' : 'Image size must be less than 2MB.', 'warning');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64Data = event.target.result;
+      setAccountData(prev => ({ ...prev, avatar: base64Data }));
+      showToast(lang === 'uz' ? 'Rasm tanlandi. Saqlash uchun "Saqlash" tugmasini bosing.' : 'Image selected. Click "Save Information" to apply.', 'info');
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveAvatar = async () => {
+    setAccountData(prev => ({ ...prev, avatar: '' }));
+    try {
+      await updateProfile({ avatar: '' });
+      showToast(lang === 'uz' ? 'Profil rasmi olib tashlandi.' : 'Profile photo removed.', 'info');
+    } catch (e) {
+      showToast('Failed to remove photo.', 'error');
+    }
+  };
 
   // Notification toggles
   const [notifSettings, setNotifSettings] = useState({
@@ -50,31 +101,17 @@ export function Settings() {
     labResults: true
   });
 
-  const handleSaveAccount = (e) => {
+  const handleSaveAccount = async (e) => {
     e.preventDefault();
-    updateProfile(accountData);
-    showToast(lang === 'uz' ? 'Shaxsiy maʼlumotlar saqlandi.' : 'Personal information updated.', 'success');
-  };
-
-  const handleChangePassword = (e) => {
-    e.preventDefault();
-    setPassError('');
-
-    if (!passwords.currentPassword) {
-      setPassError(lang === 'uz' ? 'Amaldagi parolni kiriting.' : 'Current password is required.');
-      return;
+    setSavingAccount(true);
+    try {
+      await updateProfile(accountData);
+      showToast(lang === 'uz' ? 'Shaxsiy maʼlumotlar saqlandi.' : 'Personal information updated successfully.', 'success');
+    } catch (err) {
+      showToast(err.message || 'Failed to update profile.', 'error');
+    } finally {
+      setSavingAccount(false);
     }
-    if (passwords.newPassword.length < 6) {
-      setPassError(lang === 'uz' ? 'Yangi parol kamida 6 belgidan iborat bo‘lishi kerak.' : 'New password must be at least 6 characters.');
-      return;
-    }
-    if (passwords.newPassword !== passwords.confirmPassword) {
-      setPassError(lang === 'uz' ? 'Yangi parollar bir-biriga mos kelmadi.' : 'New passwords do not match.');
-      return;
-    }
-
-    setPasswords({ currentPassword: '', newPassword: '', confirmPassword: '' });
-    showToast(lang === 'uz' ? 'Parol muvaffaqiyatli yangilandi.' : 'Password updated successfully.', 'success');
   };
 
   const handleSaveNotifications = (e) => {
@@ -88,7 +125,7 @@ export function Settings() {
   };
 
   return (
-    <div className="w-full space-y-6 sm:space-y-8 animate-fadeIn">
+    <div className="w-full space-y-6 sm:space-y-8 animate-fadeIn pb-12">
       <div>
         <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center gap-2.5">
           <SettingsIcon className="w-7 h-7 text-blue-600 dark:text-blue-400" />
@@ -96,18 +133,17 @@ export function Settings() {
         </h1>
         <p className="mt-1 text-xs sm:text-sm text-slate-500 dark:text-slate-400">
           {lang === 'uz'
-            ? 'Shaxsiy hisob, xavfsizlik, bildirishnomalar va ko‘rinish sozlamalarini boshqaring.'
+            ? 'Shaxsiy hisob, bildirishnomalar va ko‘rinish sozlamalarini boshqaring.'
             : lang === 'ru'
-            ? 'Управляйте личным кабинетом, безопасностью, уведомлениями и настройками интерфейса.'
-            : 'Manage your personal account, security credentials, notification alerts, and appearance preferences.'}
+            ? 'Управляйте личным профилем, уведомлениями и настройками интерфейса.'
+            : 'Manage your personal profile, notification alerts, and appearance preferences.'}
         </p>
       </div>
 
-      {/* Tabs */}
+      {/* Tabs - Security tab completely removed */}
       <div className="flex overflow-x-auto gap-2 p-1.5 rounded-2xl bg-slate-100 dark:bg-slate-800/80 no-scrollbar">
         {[
           { id: 'account', label: t('personalInfo'), icon: User },
-          { id: 'security', label: t('security'), icon: Lock },
           { id: 'notifications', label: t('notifications'), icon: Bell },
           { id: 'preferences', label: t('preferences'), icon: Palette }
         ].map((tab) => {
@@ -129,7 +165,7 @@ export function Settings() {
         })}
       </div>
 
-      {/* TAB 1: Account */}
+      {/* TAB 1: Account / Personal Info */}
       {activeTab === 'account' && (
         <form
           onSubmit={handleSaveAccount}
@@ -138,8 +174,56 @@ export function Settings() {
           <div className="border-b border-slate-100 dark:border-slate-800 pb-4">
             <h3 className="text-base font-bold text-slate-900 dark:text-white">{t('personalInfo')}</h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              {lang === 'uz' ? 'Aloqa maʼlumotlari va yashash manzilingizni yangilang.' : 'Update your contact credentials and home address.'}
+              {lang === 'uz' ? 'Shaxsiy maʼlumotlar, profil rasmi va aloqa manzilingizni yangilang.' : 'Update your personal profile photo, details, and contact address.'}
             </p>
+          </div>
+
+          {/* Avatar Profile Photo Upload */}
+          <div className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800">
+            <Avatar
+              src={accountData.avatar || patient?.avatar}
+              name={accountData.name || patient?.name}
+              size="lg"
+              className="ring-2 ring-blue-500/30 shadow-md"
+            />
+
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleImageFileChange}
+              accept="image/*"
+              className="hidden"
+            />
+
+            <div className="space-y-1">
+              <span className="text-xs font-bold text-slate-900 dark:text-white block">
+                {lang === 'uz' ? 'Profil rasmi' : 'Profile Photo'}
+              </span>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                {lang === 'uz' ? 'PNG, JPG yoki WebP (maks. 2MB)' : 'PNG, JPG or WebP (max. 2MB)'}
+              </p>
+              <div className="flex items-center gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-colors flex items-center gap-1.5 shadow-sm"
+                >
+                  <Camera className="w-3.5 h-3.5" />
+                  <span>{accountData.avatar ? (lang === 'uz' ? 'O‘zgartirish' : 'Change Photo') : (lang === 'uz' ? 'Rasm yuklash' : 'Upload Photo')}</span>
+                </button>
+
+                {accountData.avatar && (
+                  <button
+                    type="button"
+                    onClick={handleRemoveAvatar}
+                    className="px-2.5 py-1.5 rounded-xl bg-slate-200 dark:bg-slate-700 hover:bg-rose-600 hover:text-white text-slate-700 dark:text-slate-300 text-xs font-bold transition-colors flex items-center gap-1"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>{lang === 'uz' ? 'O‘chirish' : 'Remove'}</span>
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -153,8 +237,8 @@ export function Settings() {
               label={t('emailAddress')}
               type="email"
               value={accountData.email}
-              onChange={(e) => setAccountData({ ...accountData, email: e.target.value })}
-              required
+              disabled
+              helperText="Email is managed via Supabase Auth"
             />
           </div>
 
@@ -163,77 +247,72 @@ export function Settings() {
               label={t('phoneNumber')}
               value={accountData.phone}
               onChange={(e) => setAccountData({ ...accountData, phone: e.target.value })}
+              placeholder="+1 (555) 000-0000"
             />
             <Input
               label={t('homeAddress')}
               value={accountData.address}
               onChange={(e) => setAccountData({ ...accountData, address: e.target.value })}
+              placeholder="City, State / Address"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <Input
+              label={t('dateOfBirth')}
+              type="date"
+              value={accountData.dateOfBirth}
+              onChange={(e) => setAccountData({ ...accountData, dateOfBirth: e.target.value })}
+            />
+            <Select
+              label={t('gender')}
+              value={accountData.gender}
+              onChange={(e) => setAccountData({ ...accountData, gender: e.target.value })}
+              options={[
+                { value: 'Male', label: lang === 'uz' ? 'Erkak' : 'Male' },
+                { value: 'Female', label: lang === 'uz' ? 'Ayol' : 'Female' },
+                { value: 'Other', label: lang === 'uz' ? 'Boshqa' : 'Other' }
+              ]}
+            />
+            <Select
+              label={t('bloodGroup')}
+              value={accountData.bloodGroup}
+              onChange={(e) => setAccountData({ ...accountData, bloodGroup: e.target.value })}
+              options={[
+                { value: 'A+', label: 'A+' },
+                { value: 'A-', label: 'A-' },
+                { value: 'B+', label: 'B+' },
+                { value: 'B-', label: 'B-' },
+                { value: 'AB+', label: 'AB+' },
+                { value: 'AB-', label: 'AB-' },
+                { value: 'O+', label: 'O+' },
+                { value: 'O-', label: 'O-' }
+              ]}
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+              {lang === 'uz' ? 'Bio / Salomatlik haqida qisqacha' : 'Bio / Health Summary'}
+            </label>
+            <textarea
+              rows={3}
+              value={accountData.bio}
+              onChange={(e) => setAccountData({ ...accountData, bio: e.target.value })}
+              placeholder={lang === 'uz' ? 'Salomatlik haqida qisqacha ma‘lumot...' : 'Brief health notes or bio...'}
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 text-xs sm:text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all duration-200"
             />
           </div>
 
           <div className="flex justify-end pt-4 border-t border-slate-100 dark:border-slate-800">
-            <Button type="submit" variant="primary" icon={Save}>
+            <Button type="submit" variant="primary" icon={Save} loading={savingAccount}>
               {t('saveInfo')}
             </Button>
           </div>
         </form>
       )}
 
-      {/* TAB 2: Security */}
-      {activeTab === 'security' && (
-        <form
-          onSubmit={handleChangePassword}
-          className="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-6 sm:p-8 shadow-sm space-y-6 animate-fadeIn"
-        >
-          <div className="border-b border-slate-100 dark:border-slate-800 pb-4">
-            <h3 className="text-base font-bold text-slate-900 dark:text-white">{t('security')}</h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              {lang === 'uz' ? 'Hisobingiz xavfsizligini taʼminlash uchun kuchli paroldan foydalaning.' : 'Ensure your account is using a strong, unique password.'}
-            </p>
-          </div>
-
-          {passError && (
-            <div className="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 text-xs font-semibold text-rose-600 dark:text-rose-400">
-              {passError}
-            </div>
-          )}
-
-          <div className="max-w-md space-y-4">
-            <Input
-              label={t('currentPassword')}
-              type="password"
-              value={passwords.currentPassword}
-              onChange={(e) => setPasswords({ ...passwords, currentPassword: e.target.value })}
-              placeholder="••••••••"
-              required
-            />
-            <Input
-              label={t('newPassword')}
-              type="password"
-              value={passwords.newPassword}
-              onChange={(e) => setPasswords({ ...passwords, newPassword: e.target.value })}
-              placeholder="••••••••"
-              required
-            />
-            <Input
-              label={t('confirmNewPassword')}
-              type="password"
-              value={passwords.confirmPassword}
-              onChange={(e) => setPasswords({ ...passwords, confirmPassword: e.target.value })}
-              placeholder="••••••••"
-              required
-            />
-          </div>
-
-          <div className="flex justify-end pt-4 border-t border-slate-100 dark:border-slate-800">
-            <Button type="submit" variant="primary" icon={Save}>
-              {t('updatePassword')}
-            </Button>
-          </div>
-        </form>
-      )}
-
-      {/* TAB 3: Notifications */}
+      {/* TAB 2: Notifications */}
       {activeTab === 'notifications' && (
         <form
           onSubmit={handleSaveNotifications}
@@ -295,7 +374,7 @@ export function Settings() {
         </form>
       )}
 
-      {/* TAB 4: Preferences */}
+      {/* TAB 3: Preferences */}
       {activeTab === 'preferences' && (
         <form
           onSubmit={handleSavePreferences}

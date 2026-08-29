@@ -36,7 +36,7 @@ export function BookAppointment() {
 
   const [step, setStep] = useState(1);
   const [selectedDoctor, setSelectedDoctor] = useState(null);
-  const [selectedDate, setSelectedDate] = useState('2026-08-28');
+  const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [selectedTime, setSelectedTime] = useState('');
   const [reason, setReason] = useState('');
   const [symptoms, setSymptoms] = useState('');

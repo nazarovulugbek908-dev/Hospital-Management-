@@ -39,14 +39,19 @@ function ProtectedRoute({ children, requiredRole = null }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC] dark:bg-[#0F172A] text-primary">
-        <div className="animate-spin text-3xl">⏳</div>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white space-y-3">
+        <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+        <p className="text-xs font-semibold text-slate-400">Authenticating with MediCare...</p>
       </div>
     );
   }
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
+  }
+
+  if (requiredRole && role !== requiredRole) {
+    return <Navigate to={role === 'admin' ? '/admin/dashboard' : '/patient/dashboard'} replace />;
   }
 
   return children;
@@ -64,7 +69,7 @@ export function AppRoutes() {
       {/* Admin Portal Pages (Under AdminLayout) */}
       <Route
         element={
-          <ProtectedRoute>
+          <ProtectedRoute requiredRole="admin">
             <AdminLayout />
           </ProtectedRoute>
         }
