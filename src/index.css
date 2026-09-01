@@ -61,3 +61,74 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* Modern Date & Time Picker Indicator Styling */
+input[type="date"],
+input[type="time"] {
+  font-family: inherit;
+  color-scheme: light dark;
+}
+
+/* Remove harsh default blue highlight box on date & time segments */
+input[type="date"]::-webkit-datetime-edit,
+input[type="date"]::-webkit-datetime-edit-fields-wrapper,
+input[type="date"]::-webkit-datetime-edit-text,
+input[type="date"]::-webkit-datetime-edit-month-field,
+input[type="date"]::-webkit-datetime-edit-day-field,
+input[type="date"]::-webkit-datetime-edit-year-field,
+input[type="time"]::-webkit-datetime-edit,
+input[type="time"]::-webkit-datetime-edit-fields-wrapper,
+input[type="time"]::-webkit-datetime-edit-text,
+input[type="time"]::-webkit-datetime-edit-hour-field,
+input[type="time"]::-webkit-datetime-edit-minute-field,
+input[type="time"]::-webkit-datetime-edit-ampm-field {
+  background: transparent !important;
+  background-color: transparent !important;
+  color: inherit;
+  outline: none !important;
+}
+
+input[type="date"]::-webkit-datetime-edit-month-field:focus,
+input[type="date"]::-webkit-datetime-edit-day-field:focus,
+input[type="date"]::-webkit-datetime-edit-year-field:focus,
+input[type="time"]::-webkit-datetime-edit-hour-field:focus,
+input[type="time"]::-webkit-datetime-edit-minute-field:focus,
+input[type="time"]::-webkit-datetime-edit-ampm-field:focus {
+  background: transparent !important;
+  background-color: transparent !important;
+  color: #2563eb !important;
+  font-weight: 700;
+  outline: none !important;
+}
+
+.dark input[type="date"]::-webkit-datetime-edit-month-field:focus,
+.dark input[type="date"]::-webkit-datetime-edit-day-field:focus,
+.dark input[type="date"]::-webkit-datetime-edit-year-field:focus,
+.dark input[type="time"]::-webkit-datetime-edit-hour-field:focus,
+.dark input[type="time"]::-webkit-datetime-edit-minute-field:focus,
+.dark input[type="time"]::-webkit-datetime-edit-ampm-field:focus {
+  color: #60a5fa !important;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  border-radius: 6px;
+  padding: 2px;
+  opacity: 0.6;
+  transition: all 0.2s ease;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover,
+input[type="time"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+  transform: scale(1.12);
+}
+
+.dark input[type="date"]::-webkit-calendar-picker-indicator,
+.dark input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.9) hue-rotate(180deg);
+  opacity: 0.75;
+}
+
+

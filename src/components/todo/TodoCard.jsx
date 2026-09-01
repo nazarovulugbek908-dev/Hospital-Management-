@@ -109,7 +109,7 @@ export function TodoCard({ task, onToggle, onEdit, onDelete }) {
           {/* Badges */}
           <div className="mt-3 flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100 dark:border-slate-800/80">
             <Badge variant={priorityVariants[task.priority] || 'neutral'} size="sm" dot>
-              {task.priority === 'High' ? t('highPriority') : `${task.priority} Priority`}
+              {task.priority === 'High' ? t('priorityHigh') : task.priority === 'Medium' ? t('priorityMedium') : t('priorityLow')}
             </Badge>
 
             <Badge variant={statusVariants[task.status] || 'neutral'} size="sm">

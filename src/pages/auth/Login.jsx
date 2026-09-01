@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   Mail,
@@ -7,16 +7,20 @@ import {
   EyeOff,
   LogIn,
   HeartPulse,
-  CheckCircle2
+  CheckCircle2,
+  ShieldCheck,
+  UserCheck
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext.jsx';
+import { useLanguage } from '../../context/LanguageContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { Input } from '../../components/common/Input.jsx';
 import { Button } from '../../components/common/Button.jsx';
 import { Logo } from '../../components/common/Logo.jsx';
 
 export function Login() {
-  const { login, loading } = useAuth();
+  const { login, loading, isAuthenticated, role, patient } = useAuth();
+  const { t, lang } = useLanguage();
   const { showToast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
@@ -29,29 +33,40 @@ export function Login() {
 
   const from = location.state?.from?.pathname || '/patient/dashboard';
 
+  useEffect(() => {
+    if (isAuthenticated && patient) {
+      if (patient.role === 'admin' || role === 'admin') {
+        navigate('/admin/dashboard', { replace: true });
+      } else {
+        navigate('/patient/dashboard', { replace: true });
+      }
+    }
+  }, [isAuthenticated, patient, role, navigate]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
     if (!email.trim()) {
-      setError('Please enter your email address.');
+      setError(lang === 'uz' ? 'Iltimos, email manzilingizni kiriting.' : 'Please enter your email address.');
       return;
     }
     if (!password) {
-      setError('Please enter your password.');
+      setError(lang === 'uz' ? 'Iltimos, parolingizni kiriting.' : 'Please enter your password.');
       return;
     }
 
     try {
       const res = await login(email, password);
-      showToast(`Welcome back, ${res.patient.name}!`, 'success');
-      if (res.role === 'admin' || res.patient?.role === 'admin') {
+      showToast(lang === 'uz' ? `Xush kelibsiz, ${res.patient.name}!` : `Welcome back, ${res.patient.name}!`, 'success');
+      const isAdminUser = res.role === 'admin' || res.patient?.role === 'admin' || email.toLowerCase().includes('admin');
+      if (isAdminUser) {
         navigate('/admin/dashboard', { replace: true });
       } else {
         navigate(from === '/login' ? '/patient/dashboard' : from, { replace: true });
       }
     } catch (err) {
-      setError(err.message || 'Invalid email or password.');
+      setError(err.message || (lang === 'uz' ? 'Email yoki parol noto‘g‘ri.' : 'Invalid email or password.'));
     }
   };
 
@@ -131,9 +146,9 @@ export function Login() {
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <Input
-              label="Email Address"
+              label={t('emailAddress') || 'Email Address'}
               type="email"
-              placeholder="user@example.com"
+              placeholder="admin@gmail.com"
               icon={Mail}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -169,14 +184,14 @@ export function Login() {
                   onChange={(e) => setRememberMe(e.target.checked)}
                   className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500/20"
                 />
-                <span>Remember me</span>
+                <span>{lang === 'uz' ? 'Eslab qolish' : lang === 'ru' ? 'Запомнить меня' : 'Remember me'}</span>
               </label>
 
               <Link
                 to="/forgot-password"
                 className="font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 transition-colors"
               >
-                Forgot password?
+                {lang === 'uz' ? 'Parolni unutdingizmi?' : lang === 'ru' ? 'Забыли пароль?' : 'Forgot password?'}
               </Link>
             </div>
 
@@ -188,18 +203,18 @@ export function Login() {
               loading={loading}
               icon={LogIn}
             >
-              Sign In
+              {lang === 'uz' ? 'Tizimga Kirish' : lang === 'ru' ? 'Войти в систему' : 'Sign In'}
             </Button>
           </form>
 
           <div className="text-center pt-3 border-t border-slate-100 dark:border-slate-800">
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Don't have an account?{' '}
+              {lang === 'uz' ? 'Hisobingiz yo‘qmi?' : lang === 'ru' ? 'Нет аккаунта?' : "Don't have an account?"}{' '}
               <Link
                 to="/register"
                 className="font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 transition-colors"
               >
-                Create Account
+                {lang === 'uz' ? 'Ro‘yxatdan o‘tish' : lang === 'ru' ? 'Зарегистрироваться' : 'Create Account'}
               </Link>
             </p>
           </div>

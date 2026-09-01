@@ -80,12 +80,12 @@ export function Avatar({
   };
 
   return (
-    <div className={`relative inline-block flex-shrink-0 ${className}`}>
+    <div className={`relative inline-flex items-center justify-center rounded-full flex-shrink-0 ${sizeStyles[size]} ${className}`}>
       {src ? (
         <img
           src={src}
           alt={alt}
-          className={`rounded-full object-cover shadow-sm ${sizeStyles[size]}`}
+          className="w-full h-full rounded-full object-cover shadow-sm"
           onError={(e) => {
             e.target.onerror = null;
             e.target.style.display = 'none';
@@ -97,9 +97,9 @@ export function Avatar({
       ) : null}
 
       <div
-        className={`rounded-full bg-gradient-to-tr from-primary-600 to-secondary-500 text-white items-center justify-center font-bold shadow-sm select-none ${
-          sizeStyles[size]
-        } ${src ? 'hidden' : 'flex'}`}
+        className={`w-full h-full rounded-full bg-gradient-to-tr from-primary-600 to-secondary-500 text-white items-center justify-center font-bold shadow-sm select-none ${
+          src ? 'hidden' : 'flex'
+        }`}
       >
         {getInitials(name || alt)}
       </div>

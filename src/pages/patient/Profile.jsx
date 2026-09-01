@@ -130,12 +130,12 @@ export function Profile() {
 
         <div className="relative z-10 flex flex-col sm:flex-row items-center sm:items-start gap-6 text-center sm:text-left">
           {/* Avatar with Upload Control */}
-          <div className="relative group">
+          <div className="relative group flex flex-col items-center">
             <Avatar
               src={formData.avatar || patient.avatar}
               name={formData.name || patient.name}
               size="xl"
-              className="ring-4 ring-white/30 shadow-2xl"
+              className="rounded-full ring-4 ring-white/30 shadow-2xl"
             />
             
             <input
@@ -176,12 +176,18 @@ export function Profile() {
                 {patient.name}
               </h1>
               <Badge variant="primary" className="bg-white/20 text-white border-white/30">
-                {t('patientMember')}
+                {patient.role === 'admin' ? t('roleAdmin') : patient.role === 'doctor' ? t('roleDoctor') : t('rolePatient')}
               </Badge>
             </div>
 
             <p className="text-xs sm:text-sm text-blue-100 max-w-xl">
-              {patient.bio || (lang === 'uz' ? 'MediCare ro‘yxatdan o‘tgan bemor aʼzosi.' : 'MediCare verified patient member.')}
+              {patient.bio || (
+                patient.role === 'admin'
+                  ? t('adminBio')
+                  : patient.role === 'doctor'
+                  ? t('doctorBio')
+                  : t('patientBio')
+              )}
             </p>
 
             <div className="pt-2 flex flex-wrap justify-center sm:justify-start gap-4 text-xs text-blue-100">
@@ -229,6 +235,7 @@ export function Profile() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
               label={t('fullName')}
+              icon={User}
               value={formData.name}
               disabled={!isEditing}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -237,6 +244,7 @@ export function Profile() {
 
             <Input
               label={t('emailAddress')}
+              icon={Mail}
               type="email"
               value={formData.email}
               disabled
@@ -245,20 +253,25 @@ export function Profile() {
 
             <Input
               label={t('phoneNumber')}
+              icon={Phone}
               value={formData.phone}
               disabled={!isEditing}
+              placeholder="+998 (90) 123-45-67"
               onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
             />
 
             <Input
               label={t('homeAddress')}
+              icon={MapPin}
               value={formData.address}
               disabled={!isEditing}
+              placeholder={lang === 'uz' ? 'Toshkent sh., Chilonzor tumani' : 'Tashkent, Uzbekistan'}
               onChange={(e) => setFormData({ ...formData, address: e.target.value })}
             />
 
             <Input
               label={t('dateOfBirth')}
+              icon={Calendar}
               type="date"
               value={formData.dateOfBirth}
               disabled={!isEditing}
@@ -267,6 +280,7 @@ export function Profile() {
 
             <Select
               label={t('gender')}
+              icon={User}
               value={formData.gender}
               disabled={!isEditing}
               onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
@@ -279,6 +293,7 @@ export function Profile() {
 
             <Select
               label={t('bloodGroup')}
+              icon={HeartPulse}
               value={formData.bloodGroup}
               disabled={!isEditing}
               onChange={(e) => setFormData({ ...formData, bloodGroup: e.target.value })}
@@ -296,8 +311,10 @@ export function Profile() {
 
             <Input
               label={t('emergencyContact')}
+              icon={ShieldCheck}
               value={formData.emergencyContact}
               disabled={!isEditing}
+              placeholder={lang === 'uz' ? 'masalan: Turmush o‘rtog‘i (+998 90 123-45-67)' : 'e.g. Spouse (+998 90 123-45-67)'}
               onChange={(e) => setFormData({ ...formData, emergencyContact: e.target.value })}
             />
           </div>

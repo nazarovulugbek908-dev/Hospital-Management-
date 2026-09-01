@@ -69,10 +69,10 @@ export function MobileDrawer({ isOpen, onClose }) {
     { label: t('settings') || 'Settings', to: '/settings', icon: Settings },
   ];
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     onClose();
-    logout();
-    navigate('/login');
+    await logout();
+    navigate('/login', { replace: true });
   };
 
   return (

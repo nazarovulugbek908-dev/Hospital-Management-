@@ -12,6 +12,7 @@ import {
   MapPin,
   Calendar,
   Heart,
+  HeartPulse,
   Camera,
   Trash2
 } from 'lucide-react';
@@ -229,12 +230,14 @@ export function Settings() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
               label={t('fullName')}
+              icon={User}
               value={accountData.name}
               onChange={(e) => setAccountData({ ...accountData, name: e.target.value })}
               required
             />
             <Input
               label={t('emailAddress')}
+              icon={Mail}
               type="email"
               value={accountData.email}
               disabled
@@ -245,27 +248,31 @@ export function Settings() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
               label={t('phoneNumber')}
+              icon={Phone}
               value={accountData.phone}
               onChange={(e) => setAccountData({ ...accountData, phone: e.target.value })}
-              placeholder="+1 (555) 000-0000"
+              placeholder="+998 (90) 123-45-67"
             />
             <Input
               label={t('homeAddress')}
+              icon={MapPin}
               value={accountData.address}
               onChange={(e) => setAccountData({ ...accountData, address: e.target.value })}
-              placeholder="City, State / Address"
+              placeholder={lang === 'uz' ? 'Toshkent sh., Yunusobod tumani' : 'Tashkent, Uzbekistan'}
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Input
               label={t('dateOfBirth')}
+              icon={Calendar}
               type="date"
               value={accountData.dateOfBirth}
               onChange={(e) => setAccountData({ ...accountData, dateOfBirth: e.target.value })}
             />
             <Select
               label={t('gender')}
+              icon={User}
               value={accountData.gender}
               onChange={(e) => setAccountData({ ...accountData, gender: e.target.value })}
               options={[
@@ -276,6 +283,7 @@ export function Settings() {
             />
             <Select
               label={t('bloodGroup')}
+              icon={HeartPulse}
               value={accountData.bloodGroup}
               onChange={(e) => setAccountData({ ...accountData, bloodGroup: e.target.value })}
               options={[

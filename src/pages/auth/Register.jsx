@@ -120,7 +120,7 @@ export function Register() {
               <Input
                 label="Phone Number"
                 type="tel"
-                placeholder="+1 (555) 000-0000"
+                placeholder="+998 (90) 123-45-67"
                 icon={Phone}
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}

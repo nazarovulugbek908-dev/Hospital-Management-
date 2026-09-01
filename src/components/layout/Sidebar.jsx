@@ -47,9 +47,9 @@ export function Sidebar({ collapsed, onToggleCollapse }) {
     { label: t('settings'), to: '/settings', icon: Settings },
   ];
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login', { replace: true });
   };
 
   return (
@@ -79,6 +79,21 @@ export function Sidebar({ collapsed, onToggleCollapse }) {
 
       {/* Nav List with Categorized Sections */}
       <div className="flex-1 overflow-y-auto py-3 px-3 space-y-4">
+        {patient?.role === 'admin' && (
+          <div className="pb-1">
+            <Link
+              to="/admin/dashboard"
+              className={`flex items-center gap-2.5 px-3 py-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-bold shadow-md shadow-blue-500/20 hover:opacity-95 transition-all ${
+                collapsed ? 'justify-center px-0' : ''
+              }`}
+              title={collapsed ? t('adminPortal') : undefined}
+            >
+              <ShieldCheck className="w-4 h-4 flex-shrink-0" />
+              {!collapsed && <span>{t('adminPortal')}</span>}
+            </Link>
+          </div>
+        )}
+
         {/* Section 1: Clinical Services */}
         <div className="space-y-1">
           {!collapsed && (
@@ -180,7 +195,7 @@ export function Sidebar({ collapsed, onToggleCollapse }) {
               </p>
               <div className="text-xs font-mono font-bold text-slate-900 dark:text-white flex items-center gap-1.5 pt-0.5">
                 <PhoneCall className="w-3.5 h-3.5 text-blue-600" />
-                <span>+1 (800) 427-3785</span>
+                <span>+998 (71) 200-03-03</span>
               </div>
             </div>
           </div>

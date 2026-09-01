@@ -52,7 +52,7 @@ export function HospitalProvider({ children }) {
           biography: d.biography || '',
           avatar: d.avatar || '',
           email: d.email || `${d.name.toLowerCase().replace(/[^a-z]/g, '')}@medicare.org`,
-          phone: d.phone || '+1 (555) 234-5678'
+          phone: d.phone || '+998 (90) 234-56-78'
         }));
         setDoctors(mapped);
       } else {
@@ -285,7 +285,7 @@ export function HospitalProvider({ children }) {
               biography: d.biography || '',
               avatar: d.avatar || '',
               email: d.email || `${d.name.toLowerCase().replace(/[^a-z]/g, '')}@medicare.org`,
-              phone: d.phone || '+1 (555) 234-5678'
+              phone: d.phone || '+998 (90) 234-56-78'
             };
             setDoctors(prev => {
               if (prev.some(x => x.id === newDoc.id)) return prev;
@@ -310,7 +310,7 @@ export function HospitalProvider({ children }) {
               id: p.id,
               name: p.name,
               email: p.email || '',
-              phone: p.phone || '+1 (555) 000-0000',
+              phone: p.phone || '+998 (90) 123-45-67',
               dateOfBirth: p.date_of_birth || '1995-01-01',
               gender: p.gender || 'Male',
               bloodGroup: p.blood_group || 'O+',
@@ -504,7 +504,7 @@ export function HospitalProvider({ children }) {
       biography: doctorData.biography || '',
       avatar: doctorData.avatar || '',
       email: doctorData.email || `${doctorData.name.toLowerCase().replace(/[^a-z]/g, '')}@medicare.org`,
-      phone: doctorData.phone || '+1 (555) 234-5678'
+      phone: doctorData.phone || '+998 (90) 234-56-78'
     };
 
     // Optimistic update

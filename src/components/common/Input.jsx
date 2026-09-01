@@ -9,18 +9,28 @@ export const Input = forwardRef(function Input(
     rightElement,
     className = '',
     id,
+    type,
     ...props
   },
   ref
 ) {
   const inputId = id || (label ? label.toLowerCase().replace(/\s+/g, '-') : undefined);
 
+  const handleClick = (e) => {
+    if (type === 'date' && !props.disabled && typeof e.target.showPicker === 'function') {
+      try {
+        e.target.showPicker();
+      } catch (_) {}
+    }
+    if (props.onClick) props.onClick(e);
+  };
+
   return (
     <div className="w-full space-y-1.5 text-left">
       {label && (
         <label
           htmlFor={inputId}
-          className="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300"
+          className="block text-xs font-bold text-slate-700 dark:text-slate-300 tracking-tight"
         >
           {label}
         </label>
@@ -36,12 +46,14 @@ export const Input = forwardRef(function Input(
         <input
           ref={ref}
           id={inputId}
-          className={`w-full rounded-xl border bg-white dark:bg-slate-900/90 text-xs sm:text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 transition-all duration-200 ${
+          type={type}
+          onClick={handleClick}
+          className={`w-full rounded-xl border bg-white dark:bg-slate-900 text-xs sm:text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-blue-500/15 focus:border-blue-600 dark:focus:border-blue-500 transition-all duration-200 disabled:bg-slate-50 dark:disabled:bg-slate-800/40 disabled:text-slate-500 dark:disabled:text-slate-400 disabled:border-slate-200/90 dark:disabled:border-slate-800 disabled:cursor-not-allowed ${
             Icon ? 'pl-10' : 'pl-3.5'
           } ${rightElement ? 'pr-10' : 'pr-3.5'} py-2.5 ${
             error
               ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-500/20'
-              : 'border-slate-300 dark:border-slate-700 focus:border-primary focus:ring-primary/20'
+              : 'border-slate-200 dark:border-slate-800'
           } ${className}`}
           {...props}
         />
@@ -83,7 +95,7 @@ export const Select = forwardRef(function Select(
       {label && (
         <label
           htmlFor={selectId}
-          className="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300"
+          className="block text-xs font-bold text-slate-700 dark:text-slate-300 tracking-tight"
         >
           {label}
         </label>
@@ -99,12 +111,12 @@ export const Select = forwardRef(function Select(
         <select
           ref={ref}
           id={selectId}
-          className={`w-full rounded-xl border bg-white dark:bg-slate-900/90 text-xs sm:text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 transition-all duration-200 appearance-none ${
+          className={`w-full rounded-xl border bg-white dark:bg-slate-900 text-xs sm:text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-blue-500/15 focus:border-blue-600 dark:focus:border-blue-500 transition-all duration-200 appearance-none cursor-pointer disabled:bg-slate-50 dark:disabled:bg-slate-800/40 disabled:text-slate-500 dark:disabled:text-slate-400 disabled:border-slate-200/90 dark:disabled:border-slate-800 disabled:cursor-not-allowed ${
             Icon ? 'pl-10' : 'pl-3.5'
-          } pr-10 py-2.5 cursor-pointer ${
+          } pr-10 py-2.5 ${
             error
               ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-500/20'
-              : 'border-slate-300 dark:border-slate-700 focus:border-primary focus:ring-primary/20'
+              : 'border-slate-200 dark:border-slate-800'
           } ${className}`}
           {...props}
         >

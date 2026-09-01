@@ -64,9 +64,9 @@ export function Navbar({ onOpenMobileMenu }) {
     navigate(`/patient/doctors?search=${encodeURIComponent(searchQuery)}`);
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login', { replace: true });
   };
 
   return (
@@ -259,6 +259,17 @@ export function Navbar({ onOpenMobileMenu }) {
                   </div>
 
                   <div className="py-1 space-y-0.5 text-xs">
+                    {patient.role === 'admin' && (
+                      <Link
+                        to="/admin/dashboard"
+                        onClick={() => setIsProfileOpen(false)}
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/60 transition-colors font-bold mb-1 border border-blue-200 dark:border-blue-800"
+                      >
+                        <ShieldCheck className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                        <span>{t('adminPortal')}</span>
+                      </Link>
+                    )}
+
                     <Link
                       to="/profile"
                       onClick={() => setIsProfileOpen(false)}
