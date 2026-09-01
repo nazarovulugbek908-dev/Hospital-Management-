@@ -13,6 +13,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext.jsx';
+import { useLanguage } from '../../context/LanguageContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { Button } from '../../components/common/Button.jsx';
 import { Input, Select } from '../../components/common/Input.jsx';
@@ -20,11 +21,12 @@ import { Logo } from '../../components/common/Logo.jsx';
 
 export function Register() {
   const { register, loading } = useAuth();
+  const { t, lang } = useLanguage();
   const { showToast } = useToast();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    fullName: '',
+    name: '',
     email: '',
     phone: '',
     password: '',
@@ -42,33 +44,33 @@ export function Register() {
     e.preventDefault();
     setError('');
 
-    if (!formData.fullName.trim()) {
-      setError('Please enter your full name.');
+    if (!formData.name.trim()) {
+      setError(lang === 'uz' ? 'Iltimos, to‘liq ismingizni kiriting.' : 'Please enter your full name.');
       return;
     }
     if (!formData.email.trim()) {
-      setError('Please enter your email address.');
+      setError(lang === 'uz' ? 'Iltimos, email manzilingizni kiriting.' : 'Please enter your email address.');
       return;
     }
     if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters long.');
+      setError(lang === 'uz' ? 'Parol kamida 6 ta belgidan iborat bo‘lishi kerak.' : 'Password must be at least 6 characters long.');
       return;
     }
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match.');
+      setError(lang === 'uz' ? 'Parollar bir-biriga mos kelmadi.' : 'Passwords do not match.');
       return;
     }
     if (!formData.agreeTerms) {
-      setError('You must agree to the Terms of Service & Privacy Policy.');
+      setError(lang === 'uz' ? 'Foydalanish shartlariga rozilik bildiring.' : 'You must agree to the Terms of Service.');
       return;
     }
 
     try {
       await register(formData);
-      showToast('Patient account created successfully!', 'success');
+      showToast(lang === 'uz' ? 'Bemor hisobingiz muvaffaqiyatli yaratildi! 🎉' : 'Patient account created successfully! 🎉', 'success');
       navigate('/patient/dashboard');
     } catch (err) {
-      setError(err.message || 'Failed to create patient account.');
+      setError(err.message || (lang === 'uz' ? 'Ro‘yxatdan o‘tishda xatolik yuz berdi.' : 'Failed to create patient account.'));
     }
   };
 
@@ -82,34 +84,38 @@ export function Register() {
           <Link to="/" className="inline-flex items-center justify-center">
             <Logo size="lg" />
           </Link>
-          <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
-            Patient Registration
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+            {lang === 'uz' ? 'Bemor sifatida ro‘yxatdan o‘tish' : lang === 'ru' ? 'Регистрация пациента' : 'Patient Registration'}
           </h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            Create your personal healthcare account to find doctors and book consultations.
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto">
+            {lang === 'uz'
+              ? 'Shifokorlar qabuliga yozilish va tibbiy tarixingizni kuzatish uchun hisob yarating.'
+              : lang === 'ru'
+              ? 'Создайте аккаунт для быстрой записи к врачам и просмотра карты.'
+              : 'Create your personal healthcare account to find doctors and book consultations.'}
           </p>
         </div>
 
         <div className="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-6 sm:p-8 shadow-xl space-y-5">
           {error && (
-            <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/70 border border-rose-200 dark:border-rose-900 text-xs font-semibold text-rose-600 dark:text-rose-400">
+            <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/70 border border-rose-200 dark:border-rose-900 text-xs font-semibold text-rose-600 dark:text-rose-400 animate-slideDown">
               {error}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <Input
-              label="Full Name"
-              placeholder="e.g. John Williams"
+              label={lang === 'uz' ? 'To‘liq Ismingiz' : lang === 'ru' ? 'Полное имя' : 'Full Name'}
+              placeholder={lang === 'uz' ? 'Masalan: Jamshid Aliyev' : 'e.g. John Williams'}
               icon={User}
-              value={formData.fullName}
-              onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               required
             />
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input
-                label="Email Address"
+                label={t('emailAddress') || (lang === 'uz' ? 'Email Manzil' : 'Email Address')}
                 type="email"
                 placeholder="patient@example.com"
                 icon={Mail}
@@ -118,7 +124,7 @@ export function Register() {
                 required
               />
               <Input
-                label="Phone Number"
+                label={t('phoneNumber') || (lang === 'uz' ? 'Telefon Raqami' : 'Phone Number')}
                 type="tel"
                 placeholder="+998 (90) 123-45-67"
                 icon={Phone}
@@ -129,7 +135,7 @@ export function Register() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input
-                label="Date of Birth"
+                label={lang === 'uz' ? 'Tug‘ilgan sana' : lang === 'ru' ? 'Дата рождения' : 'Date of Birth'}
                 type="date"
                 icon={Calendar}
                 value={formData.dateOfBirth}
@@ -138,20 +144,20 @@ export function Register() {
               />
 
               <Select
-                label="Gender"
+                label={lang === 'uz' ? 'Jinsi' : lang === 'ru' ? 'Пол' : 'Gender'}
                 value={formData.gender}
                 onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
                 options={[
-                  { value: 'Male', label: 'Male' },
-                  { value: 'Female', label: 'Female' },
-                  { value: 'Other', label: 'Other' }
+                  { value: 'Male', label: lang === 'uz' ? 'Erkak' : lang === 'ru' ? 'Мужской' : 'Male' },
+                  { value: 'Female', label: lang === 'uz' ? 'Ayol' : lang === 'ru' ? 'Женский' : 'Female' },
+                  { value: 'Other', label: lang === 'uz' ? 'Boshqa' : lang === 'ru' ? 'Другой' : 'Other' }
                 ]}
               />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input
-                label="Password"
+                label={lang === 'uz' ? 'Parol' : lang === 'ru' ? 'Пароль' : 'Password'}
                 type={showPassword ? 'text' : 'password'}
                 placeholder="Min 6 characters"
                 icon={Lock}
@@ -162,7 +168,7 @@ export function Register() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                    className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -170,7 +176,7 @@ export function Register() {
               />
 
               <Input
-                label="Confirm Password"
+                label={lang === 'uz' ? 'Parolni tasdiqlang' : lang === 'ru' ? 'Подтвердите пароль' : 'Confirm Password'}
                 type={showPassword ? 'text' : 'password'}
                 placeholder="Re-enter password"
                 icon={Lock}
@@ -180,7 +186,7 @@ export function Register() {
               />
             </div>
 
-            <label className="flex items-start gap-2.5 text-xs text-slate-600 dark:text-slate-400 pt-1 cursor-pointer">
+            <label className="flex items-start gap-2.5 text-xs text-slate-600 dark:text-slate-400 pt-1 cursor-pointer select-none">
               <input
                 type="checkbox"
                 checked={formData.agreeTerms}
@@ -188,7 +194,15 @@ export function Register() {
                 className="mt-0.5 w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500/20"
               />
               <span>
-                I agree to the <span className="text-blue-600 dark:text-blue-400 font-semibold">MediCare Terms of Service</span> and understand this is an educational portfolio system.
+                {lang === 'uz' ? (
+                  <>
+                    Men <span className="text-blue-600 dark:text-blue-400 font-semibold">MediCare Xizmat ko‘rsatish qoidalari</span>ga roziman.
+                  </>
+                ) : (
+                  <>
+                    I agree to the <span className="text-blue-600 dark:text-blue-400 font-semibold">MediCare Terms of Service</span>.
+                  </>
+                )}
               </span>
             </label>
 
@@ -200,18 +214,18 @@ export function Register() {
               loading={loading}
               icon={UserPlus}
             >
-              Create Account
+              {lang === 'uz' ? 'Ro‘yxatdan o‘tish' : lang === 'ru' ? 'Создать аккаунт' : 'Create Account'}
             </Button>
           </form>
 
           <div className="text-center pt-2 border-t border-slate-100 dark:border-slate-800">
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Already have an account?{' '}
+              {lang === 'uz' ? 'Hisobingiz bormi?' : lang === 'ru' ? 'Уже есть аккаунт?' : 'Already have an account?'}{' '}
               <Link
                 to="/login"
                 className="font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 transition-colors"
               >
-                Sign In
+                {lang === 'uz' ? 'Tizimga Kirish' : lang === 'ru' ? 'Войти' : 'Sign In'}
               </Link>
             </p>
           </div>

@@ -86,29 +86,29 @@ export function Login() {
         <div className="relative z-10 space-y-6 max-w-lg">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md text-xs font-bold text-blue-100 border border-white/20">
             <HeartPulse className="w-4 h-4 text-emerald-300" />
-            <span>Dedicated Patient Portal</span>
+            <span>{lang === 'uz' ? 'Maxsus Bemor Portali' : lang === 'ru' ? 'Портал пациента' : 'Dedicated Patient Portal'}</span>
           </div>
 
           <h1 className="text-4xl font-extrabold tracking-tight text-white leading-tight">
-            Your Health Journey, Simplified in One Place.
+            {lang === 'uz' ? 'Salomatlik sari yo‘lingiz, bir joyda jamlangan.' : lang === 'ru' ? 'Ваш путь к здоровью в одном месте.' : 'Your Health Journey, Simplified in One Place.'}
           </h1>
 
           <p className="text-sm text-blue-100/90 leading-relaxed">
-            Schedule specialized doctor appointments, review diagnosis timelines, and stay on top of personal healthcare tasks.
+            {lang === 'uz' ? 'Malakali shifokorlar qabuliga yoziling, tashxislar tarixini kuzatib boring va vazifalaringizni boshqaring.' : lang === 'ru' ? 'Записывайтесь к профильным врачам, просматривайте историю диагнозов и управляйте задачами.' : 'Schedule specialized doctor appointments, review diagnosis timelines, and stay on top of personal healthcare tasks.'}
           </p>
 
           <div className="space-y-3 pt-4 border-t border-white/20 text-xs">
             <div className="flex items-center gap-2.5">
               <CheckCircle2 className="w-4 h-4 text-emerald-300 flex-shrink-0" />
-              <span>Direct access to accredited clinical specialists</span>
+              <span>{lang === 'uz' ? 'Akkreditatsiyadan o‘tgan yetakchi mutaxassislar' : lang === 'ru' ? 'Аккредитованные клинические специалисты' : 'Direct access to accredited clinical specialists'}</span>
             </div>
             <div className="flex items-center gap-2.5">
               <CheckCircle2 className="w-4 h-4 text-emerald-300 flex-shrink-0" />
-              <span>Real-time appointment calendar & instant booking</span>
+              <span>{lang === 'uz' ? 'Real vaqtda qabullarga tezkor yozilish' : lang === 'ru' ? 'Быстрая запись на прием в реальном времени' : 'Real-time appointment calendar & instant booking'}</span>
             </div>
             <div className="flex items-center gap-2.5">
               <CheckCircle2 className="w-4 h-4 text-emerald-300 flex-shrink-0" />
-              <span>Secure personal health history & consultation records</span>
+              <span>{lang === 'uz' ? 'Xavfsiz shaxsiy tibbiy tarix va konsultatsiyalar' : lang === 'ru' ? 'Безопасная история болезни и консультаций' : 'Secure personal health history & consultation records'}</span>
             </div>
           </div>
         </div>
@@ -130,10 +130,10 @@ export function Login() {
 
           <div className="space-y-1.5">
             <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-              Welcome Back
+              {lang === 'uz' ? 'Xush kelibsiz' : lang === 'ru' ? 'С возвращением' : 'Welcome Back'}
             </h2>
             <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-              Sign in with your email and password to access your portal.
+              {lang === 'uz' ? 'Portalga kirish uchun emailingiz va parolingizni kiriting.' : lang === 'ru' ? 'Введите email и пароль для входа в систему.' : 'Sign in with your email and password to access your portal.'}
             </p>
           </div>
 
@@ -146,9 +146,9 @@ export function Login() {
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <Input
-              label={t('emailAddress') || 'Email Address'}
+              label={t('emailAddress') || (lang === 'uz' ? 'Email Manzil' : 'Email Address')}
               type="email"
-              placeholder="admin@gmail.com"
+              placeholder="user@example.com"
               icon={Mail}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -157,7 +157,7 @@ export function Login() {
             />
 
             <Input
-              label="Password"
+              label={lang === 'uz' ? 'Parol' : lang === 'ru' ? 'Пароль' : 'Password'}
               type={showPassword ? 'text' : 'password'}
               placeholder="••••••••"
               icon={Lock}

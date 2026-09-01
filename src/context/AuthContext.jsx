@@ -36,9 +36,9 @@ export function AuthProvider({ children }) {
   const buildPatientProfile = async (supabaseUser) => {
     if (!supabaseUser) return null;
 
-    const email = supabaseUser.email?.toLowerCase();
+    const email = supabaseUser.email?.toLowerCase() || '';
     const meta = supabaseUser.user_metadata || {};
-    const isUserAdmin = meta.role === 'admin' || email?.includes('admin');
+    const isUserAdmin = meta.role === 'admin' || profileData?.role === 'admin' || email === 'admin@hospital.com' || email === 'admin@medicare.uz';
 
     // Try to fetch patient details from `patients` table in Supabase with strict 1s timeout
     let profileData = {};
@@ -65,18 +65,18 @@ export function AuthProvider({ children }) {
     const mapped = {
       id: supabaseUser.id,
       patientId: profileData.id || `pat-${supabaseUser.id.slice(0, 8)}`,
-      role: isUserAdmin ? 'admin' : (profileData.role || meta.role || 'patient'),
-      name: profileData.name || meta.full_name || meta.name || email?.split('@')[0] || (isUserAdmin ? 'System Administrator' : 'Patient'),
+      role: (meta.role === 'admin' || profileData.role === 'admin' || email === 'admin@hospital.com' || email === 'admin@medicare.uz') ? 'admin' : 'patient',
+      name: profileData.name || meta.full_name || meta.name || email?.split('@')[0] || 'Patient',
       email: email,
-      phone: profileData.phone || meta.phone || (isUserAdmin ? '+998 (90) 100-20-00' : '+998 (90) 123-45-67'),
+      phone: profileData.phone || meta.phone || '+998 (90) 123-45-67',
       dateOfBirth: profileData.date_of_birth || meta.dateOfBirth || meta.date_of_birth || '1995-01-01',
       gender: profileData.gender || meta.gender || 'Male',
       bloodGroup: profileData.blood_group || meta.bloodGroup || meta.blood_group || 'O+',
       address: profileData.address || meta.address || 'Toshkent sh., Yunusobod tumani',
       avatar: sanitizedAvatar,
       emergencyContact: profileData.emergency_contact || meta.emergencyContact || meta.emergency_contact || '',
-      medicalCondition: profileData.medical_condition || meta.medicalCondition || (isUserAdmin ? 'Hospital Administrator' : 'General Care'),
-      bio: profileData.bio || meta.bio || (isUserAdmin ? 'MediCare tizim administratori.' : '')
+      medicalCondition: profileData.medical_condition || meta.medicalCondition || 'General Care',
+      bio: profileData.bio || meta.bio || ''
     };
 
     return mapped;
@@ -138,7 +138,7 @@ export function AuthProvider({ children }) {
   const login = async (email, password) => {
     setLoading(true);
     const normalizedEmail = email.trim().toLowerCase();
-    const isSpecialAdmin = normalizedEmail === 'admin@gmail.com' || normalizedEmail === 'admin@hospital.com' || normalizedEmail.includes('admin');
+    const isSpecialAdmin = normalizedEmail === 'admin@hospital.com' || normalizedEmail === 'admin@medicare.uz';
 
     try {
       const { data, error } = await supabase.auth.signInWithPassword({

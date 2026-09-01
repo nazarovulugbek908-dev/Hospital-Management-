@@ -58,11 +58,31 @@ function ProtectedRoute({ children, requiredRole = null }) {
   return children;
 }
 
+function RootRedirect() {
+  const { isAuthenticated, loading, role, patient } = useAuth();
+
+  if (loading && !patient) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white space-y-3">
+        <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+        <p className="text-xs font-semibold text-slate-400">Loading MediCare...</p>
+      </div>
+    );
+  }
+
+  if (isAuthenticated || patient) {
+    return <Navigate to={role === 'admin' ? '/admin/dashboard' : '/patient/dashboard'} replace />;
+  }
+
+  return <Navigate to="/login" replace />;
+}
+
 export function AppRoutes() {
   return (
     <Routes>
-      {/* Public Pages */}
-      <Route path="/" element={<Home />} />
+      {/* Root redirect: Takes to login if not authenticated, or to dashboard if logged in */}
+      <Route path="/" element={<RootRedirect />} />
+      <Route path="/home" element={<Home />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
